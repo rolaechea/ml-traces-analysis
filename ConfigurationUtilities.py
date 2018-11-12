@@ -5,6 +5,37 @@ Created on Tue Nov  6 13:05:54 2018
 
 @author: rafaelolaechea
 """
+import numpy as np
+
+
+def getAllPossibleIds():
+    """
+    Get a set of configuration ids from which the training/test set will be selected.
+    """
+    return range(0, 2304)       
+
+
+def mean_absolute_error(y_true, y_pred):
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+
+    return np.mean(np.abs(y_true - y_pred))
+
+def transformFeatureBitmapsToIncludeSquares(X):
+    """
+    Given a vector of bitmaps representing examples x_0, .... x_n
+    Creates a corresponding vector of bitmaps including all possible square combinations X_i * x_J where i < j ordered by i and then j.    
+    """
+    transformedX = []
+    for originalFeatureSet in X: 
+        Squares = []
+        for a, indexA in zip(originalFeatureSet, range(0, len(originalFeatureSet))):
+            for b in originalFeatureSet[indexA+1:]:
+                Squares.extend([a*b])
+        jointFeatureSet =  originalFeatureSet + Squares
+        transformedX.extend([jointFeatureSet])
+        
+    return transformedX
+
 
 
 def generateBitsetForOneConfiguration(configurationId):
@@ -46,6 +77,7 @@ def generateBitsetForOneConfiguration(configurationId):
 
     return confBitmap
     
+
 def generateConfigurationBitset():
     """
     Generates a bitset of size N for all configurations of X264 in a list.
