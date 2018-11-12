@@ -37,6 +37,47 @@ def transformFeatureBitmapsToIncludeSquares(X):
     return transformedX
 
 
+    
+def transformBitsetToIncludeFeatureCubes(X):
+    """
+  Given a vector of bitmaps representing examples x_0, .... x_n
+    Creates a corresponding vector of bitmaps including all possible square combinations X_i * x_J where i < j ordered by i and then j,
+    and all possible triplets combinations X_i * X_J * X_K with i < j < k
+    """
+    transformedX = []
+    for originalFeatureSet in X: 
+        Squares = []
+        for a, indexA in zip(originalFeatureSet, range(0, len(originalFeatureSet))):
+            for b in originalFeatureSet[indexA+1:]:
+                Squares.extend([a*b])
+        
+        startSquaresIndex = 0
+        
+        # Add cubes, note x_i will only multiply pairs x_j * xK if j>i and k > j.        
+        Triplets = []
+        for a, indexA in zip(originalFeatureSet, range(0, len(originalFeatureSet))):
+            startSquaresIndex = startSquaresIndex + len(originalFeatureSet[indexA+1:])
+            for b  in Squares[startSquaresIndex:]:
+                Triplets.extend([a*b])
+                
+
+        jointFeatureSet =  originalFeatureSet + Squares + Triplets
+        transformedX.extend([jointFeatureSet])
+        
+    return transformedX
+
+def testTransformCubeAndSquaresTransformations():
+    """
+    Check both squares and triplets additions to feature set work as expected.    
+    """
+    testInput = [[0, 1, 1]]
+    
+    assert ( [[0, 1, 1, 0, 0, 1, 0]] ==    transformBitsetToIncludeFeatureCubes(testInput) )
+    
+    assert ( [[0, 1, 1, 0, 0, 1]] ==    transformFeatureBitmapsToIncludeSquares(testInput) )
+
+    print("Test Passed")
+    
 
 def generateBitsetForOneConfiguration(configurationId):
     """
@@ -93,21 +134,5 @@ def generateConfigurationBitset():
     return confDict
 
 
-def transformBitsetToIncludeFeatureSquares(X):
-    """
-    Given a configuration expressed as a bitset, 
-    returns a bitstet that includes x_i *x_j as variables for each i,j.
-    
-    TODO - Excluse i*i as a variable.
-    """
-    transformedX = []
-    
-    for originalFeatureSet in X: 
-        Squares = []
-        for a in originalFeatureSet:
-            for b in originalFeatureSet:
-                Squares.extend([a*b])
-        jointFeatureSet =  originalFeatureSet + Squares
-        transformedX.extend([jointFeatureSet])
-        
-    return transformedX
+
+

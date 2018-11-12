@@ -13,7 +13,8 @@ from sklearn.linear_model import LinearRegression
 
 from ParseTrace import extractTransitionToBagOfTimesDictionaryFromTraceFile,  getArrayOfDictTransitionIdsToValueSet
 
-from ConfigurationUtilities import generateBitsetForOneConfiguration, transformFeatureBitmapsToIncludeSquares, mean_absolute_error, getAllPossibleIds
+from ConfigurationUtilities import generateBitsetForOneConfiguration, transformFeatureBitmapsToIncludeSquares, \
+mean_absolute_error, getAllPossibleIds, transformBitsetToIncludeFeatureCubes
 
 from sklearn.model_selection import train_test_split
 
@@ -49,7 +50,7 @@ def getFlattenedAndReadyXAndY(test_index, X, Y, includeSquaredX=False):
         
        return (XBitmapsRepeated, ReadyY)
     
-def getScaledXAndY(train_index, X, Y, includeSquaredX=False):
+def getScaledXAndY(train_index, X, Y, includeSquaredX=False, includeCubedX=False):
         """
         Given a list of indices of configurations, A list of configurations in X , A list of training time execution bags.
         #, and X, YBAgs,
@@ -77,8 +78,10 @@ def getScaledXAndY(train_index, X, Y, includeSquaredX=False):
         # Fitting Standard Sclaer
         if len(SingleYList) == 0:
             # No Y Values so can't scale nor extract Y.
-            if includeSquaredX:
-                return (None, None, None, None, False)                  
+            if includeSquaredX and (not includeCubedX):
+                return (None, None, None, None, False)
+            elif includeSquaredX and  includeCubedX:
+                return (None, None, None, None, None, False)                
             else:
                 return (None, None, None, False)        
         YTrainScaler.fit([[target] for target in  SingleYList])
@@ -94,7 +97,14 @@ def getScaledXAndY(train_index, X, Y, includeSquaredX=False):
             
             XTrainSquaredBitmapsRepeated = np.repeat(XTrainSquared, [len(YBag) for YBag  in YTrainArrayOfBags], axis=0)
             
-            return (XTrainBitmapsRepeated, XTrainSquaredBitmapsRepeated,  SingleScaledY, YTrainScaler, True)        
+            if includeCubedX:
+                XTrainCubed = transformBitsetToIncludeFeatureCubes(XTrainArrayofConfigurationBitmaps)
+                
+                XTrainCubedBitmapsRepeated = np.repeat(XTrainCubed, [len(YBag) for YBag  in YTrainArrayOfBags], axis=0)
+                
+                return (XTrainBitmapsRepeated, XTrainSquaredBitmapsRepeated, XTrainCubedBitmapsRepeated,  SingleScaledY, YTrainScaler, True) 
+            else:
+                return (XTrainBitmapsRepeated, XTrainSquaredBitmapsRepeated,  SingleScaledY, YTrainScaler, True)        
         else:
             return (XTrainBitmapsRepeated, SingleScaledY, YTrainScaler, True)        
             
@@ -102,10 +112,11 @@ def getScaledXAndY(train_index, X, Y, includeSquaredX=False):
 
 def getXValuesForATransition(DictionaryArray, transitionId):
     """
-    get a set of xvalues from the read bags.
+    get a set of xvalues from the  bags.
     """
+    
 
-def regularRegressionOnConfigurations(X, Y, TransitionIdForPrinting, IncludeSquares=False, IncludeRidgeRegression=False):
+def regularRegressionOnConfigurations(X, Y, TransitionIdForPrinting, IncludeSquares=False, IncludeCubes=False, IncludeRidgeRegression=False):
     """
     Input X Array of Configuration Values of size N
     Input Y Array of bags of time taken values of Size N, where Y(i) corressponds to list of time takens for Configuration X(i)
@@ -127,6 +138,8 @@ def regularRegressionOnConfigurations(X, Y, TransitionIdForPrinting, IncludeSqua
     MAPEValidationList = []
     MAPETrainListWithSquares = []
     MAPEValidationListWithSquares = []  
+    MAPETrainListWithCubes = []
+    MAPEValidationListWithCubes = []  
     
     alphaValuesList = [0.5, 1.0, 1.5, 2.0, 10.0, 15.0]
     
@@ -134,17 +147,23 @@ def regularRegressionOnConfigurations(X, Y, TransitionIdForPrinting, IncludeSqua
 
         partitionIndex = partitionIndex + 1
         
-        if IncludeSquares:
-            XReadyScaled, XSquaredReadyScaled, YReadyScaled, YTrainScaler, hasYValues = getScaledXAndY(train_index, X, Y, True)
+        print ("PartitionIndex {0} ".format(partitionIndex))
+
+        if IncludeSquares and (not IncludeCubes):
+            XReady, XSquaredReady, YReadyScaled, YTrainScaler, hasYValues = getScaledXAndY(train_index, X, Y, True)
+        elif IncludeSquares and IncludeCubes:
+            XReady, XSquaredReady, XCubedReady, YReadyScaled, YTrainScaler, hasYValues = getScaledXAndY(train_index, X, Y, True)
         else:
-            XReadyScaled, YReadyScaled, YTrainScaler, hasYValues = getScaledXAndY(train_index, X, Y, False)            
+            XReady, YReadyScaled, YTrainScaler, hasYValues = getScaledXAndY(train_index, X, Y, False)            
         
         if hasYValues == False:                      
-            continue # No Y Values in training indices so must skip.  
+            continue # No Y Values in training indices so we must skip this cross validation round
 
 
         if IncludeSquares:
             XTest, XTestSquares, YTest = getFlattenedAndReadyXAndY(test_index, X, Y, True)
+        elif IncludeSquares and IncludeCubes:
+            XTest, XTestSquares, XTestCubes, YTest = getFlattenedAndReadyXAndY(test_index, X, Y, True)
         else:
             XTest, YTest = getFlattenedAndReadyXAndY(test_index, X, Y, False)
             
@@ -156,9 +175,9 @@ def regularRegressionOnConfigurations(X, Y, TransitionIdForPrinting, IncludeSqua
                         
         regEstimator  = LinearRegression()
 
-        regEstimator.fit(XReadyScaled, YReadyScaled)
+        regEstimator.fit(XReady, YReadyScaled)
                 
-        YTrainPredicted = regEstimator.predict(XReadyScaled)
+        YTrainPredicted = regEstimator.predict(XReady)
         
         YTrainPredictedRescaled = YTrainScaler.inverse_transform(YTrainPredicted)
         
@@ -175,12 +194,12 @@ def regularRegressionOnConfigurations(X, Y, TransitionIdForPrinting, IncludeSqua
         MAPEValidationList.append(MAPEValidation)
         
         if IncludeSquares:
-        # Perform Linear Regression With Squares.
+            # Perform Linear Regression With Squares.
             regSquareEstimator  = LinearRegression()
             
-            regSquareEstimator =  regSquareEstimator.fit(XSquaredReadyScaled, YReadyScaled)
+            regSquareEstimator =  regSquareEstimator.fit(XSquaredReady, YReadyScaled)
             
-            YTrainPredictedWithSquares =  regSquareEstimator.predict(XSquaredReadyScaled)
+            YTrainPredictedWithSquares =  regSquareEstimator.predict(XSquaredReady)
             
             YTrainPredictedWithSquaresRescaled =  YTrainScaler.inverse_transform(YTrainPredictedWithSquares)
             
@@ -194,17 +213,40 @@ def regularRegressionOnConfigurations(X, Y, TransitionIdForPrinting, IncludeSqua
             
             MAPEValidationListWithSquares.append(MAPEValidationWithSquares)
             
-        if IncludeRidgeRegression:   
-            for currentAlpha in  alphaValuesList:
-                print ("Analyze with Ridge Regression Parameter alpha={0} ".format(currentAlpha))                
+            if IncludeCubes:
+                # Perform Linear Regression With Squares.                
+                regCubeEstimator  = LinearRegression()
+                
+                regCubeEstimator =  regCubeEstimator.fit(XSquaredReady, YReadyScaled)
+                
+                YTrainPredictedWithCubes =  regCubeEstimator.predict(XSquaredReady)
+                
+                YTrainPredictedWithCubesRescaled =  YTrainScaler.inverse_transform(YTrainPredictedWithCubes)
+                
+                MAPETrainWithCubes = mean_absolute_error(YTrainOriginal, YTrainPredictedWithCubesRescaled)
+                
+                YTestPredictedRescaledWithCubes = YTrainScaler.inverse_transform(regCubeEstimator.predict(XTestCubes))        
+                
+                MAPEValidationWithCubes =  mean_absolute_error(YTest, YTestPredictedRescaledWithCubes)
+                
+                MAPETrainListWithCubes.append(MAPETrainWithCubes)
+                
+                MAPEValidationListWithCubes.append(MAPEValidationWithCubes)                    
+            
+#        if IncludeRidgeRegression:   
+#            for currentAlpha in  alphaValuesList:
+#                print ("Analyze with Ridge Regression Parameter alpha={0} ".format(currentAlpha))                
                 
                 
     if len(MAPETrainList) > 0  and len(MAPEValidationList) > 0: 
         FullSingleYList = []
         [ FullSingleYList.extend(YBag) for YBag in Y]
         AverageY =  np.mean(FullSingleYList)
-        if IncludeSquares:        
-            print ("{0}, \t\t  {1}, \t\t {2}, \t\t {3}, \t\t {4}, \t\t {5}, \t\t {6} ".format(TransitionIdForPrinting, np.mean(MAPETrainList), np.mean(MAPEValidationList), np.mean(MAPETrainListWithSquares), np.mean(MAPEValidationListWithSquares),  sum([len(a) for a in Y]), AverageY))        
+        if IncludeSquares and (not IncludeCubes):        
+            print ("{0}, \t\t  {1}, \t\t {2}, \t\t {3}, \t\t {4}, \t\t {5}, \t\t {6} ".format(TransitionIdForPrinting, np.mean(MAPETrainList), np.mean(MAPEValidationList), np.mean(MAPETrainListWithSquares), np.mean(MAPEValidationListWithSquares),  sum([len(a) for a in Y]), AverageY))      
+        elif IncludeSquares and IncludeCubes:
+           print ("{0}, \t\t  {1}, \t\t {2}, \t\t {3}, \t\t {4}, \t\t {5}, \t\t {6}, \t\t {7}, \t\t {8} ".format(TransitionIdForPrinting, np.mean(MAPETrainList), np.mean(MAPEValidationList), \
+                  np.mean(MAPETrainListWithSquares), np.mean(MAPEValidationListWithSquares),   np.mean(MAPETrainListWithCubes), np.mean(MAPEValidationListWithCubes), sum([len(a) for a in Y]), AverageY))                  
         else:
             print ("{0}, \t\t  {1}, \t\t {2}, \t\t {3}, \t\t {4} ".format(TransitionIdForPrinting, np.mean(MAPETrainList), np.mean(MAPEValidationList), sum([len(a) for a in Y]), AverageY))        
 
@@ -223,6 +265,8 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 2 and sys.argv[2] == "easy":
        transitionRange = [4,6,7,8,9,13,22,23,27,31,34]
+    elif len(sys.argv) > 2:
+        transitionRange = [int(sys.argv[2])]
     else:
        transitionRange = range(4,35)
     
@@ -232,7 +276,7 @@ if __name__ == "__main__":
     
     print("Training Set Configuration Ids, {0}: ".format(TraininingSetConfigruationIds))
     
-    ArrayOfDictTransitionIdsToValueSet = getArrayOfDictTransitionIdsToValueSet(TraininingSetConfigruationIds, verbose=False)
+    ArrayOfDictTransitionIdsToValueSet = getArrayOfDictTransitionIdsToValueSet(TraininingSetConfigruationIds, verbose=True)
     
     # Now perform Linear Regression on each transition selected
     
@@ -240,9 +284,6 @@ if __name__ == "__main__":
 
 
     for transitionId in transitionRange:
-
-        if transitionId == 5:
-                continue # skip transition 5 for now.
 
         X_Train = []
         Y_Train = []   
@@ -263,4 +304,4 @@ if __name__ == "__main__":
         #
         # Reg. Regression.
         #
-        regularRegressionOnConfigurations(X_Train, Y_Train, transitionId, IncludeSquares=True)
+        regularRegressionOnConfigurations(X_Train, Y_Train, transitionId, IncludeSquares=True, IncludeCubes=True)
