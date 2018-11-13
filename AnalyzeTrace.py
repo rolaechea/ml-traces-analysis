@@ -24,7 +24,7 @@ from sklearn.model_selection import KFold
 AlphaList = [0.1, 0.5, 1.0, 2.0]
 
 
-def getFlattenedAndReadyXAndY(test_index, X, Y, includeSquaredX=False):
+def getFlattenedAndReadyXAndY(test_index, X, Y, includeSquaredX=False, includeCubedX=False):
     """
     Same idea as getScaledXAndY, but don't scale neither X nor Y.
     Just extract Xs and flatten expand Xs. Same with Ys
@@ -44,8 +44,16 @@ def getFlattenedAndReadyXAndY(test_index, X, Y, includeSquaredX=False):
        XBitmapsSquared  = transformFeatureBitmapsToIncludeSquares(XArrayOfBitmaps)
        
        XBitmapsSquaredRepeated = np.repeat(XBitmapsSquared, [len(YBag) for YBag  in YArrayOfBags], axis=0)
-       
-       return (XBitmapsRepeated, XBitmapsSquaredRepeated, ReadyY)
+
+       if includeCubedX:
+           XBitmapsCubed  = transformBitsetToIncludeFeatureCubes(XArrayOfBitmaps)
+
+           XBitmapCubedRepeated = np.repeat(XBitmapsCubed, [len(YBag) for YBag  in YArrayOfBags], axis=0)
+
+           return (XBitmapsRepeated, XBitmapsSquaredRepeated, XBitmapCubedRepeated,  ReadyY)
+           
+       else:
+           return (XBitmapsRepeated, XBitmapsSquaredRepeated, ReadyY)
     else:
         
        return (XBitmapsRepeated, ReadyY)
@@ -150,22 +158,22 @@ def regularRegressionOnConfigurations(X, Y, TransitionIdForPrinting, IncludeSqua
         print ("PartitionIndex {0} ".format(partitionIndex))
 
         if IncludeSquares and (not IncludeCubes):
-            XReady, XSquaredReady, YReadyScaled, YTrainScaler, hasYValues = getScaledXAndY(train_index, X, Y, True)
+            XReady, XSquaredReady, YReadyScaled, YTrainScaler, hasYValues = getScaledXAndY(train_index, X, Y, True, False)
         elif IncludeSquares and IncludeCubes:
-            XReady, XSquaredReady, XCubedReady, YReadyScaled, YTrainScaler, hasYValues = getScaledXAndY(train_index, X, Y, True)
+            XReady, XSquaredReady, XCubedReady, YReadyScaled, YTrainScaler, hasYValues = getScaledXAndY(train_index, X, Y, True, True)
         else:
-            XReady, YReadyScaled, YTrainScaler, hasYValues = getScaledXAndY(train_index, X, Y, False)            
+            XReady, YReadyScaled, YTrainScaler, hasYValues = getScaledXAndY(train_index, X, Y, False, False)            
         
         if hasYValues == False:                      
             continue # No Y Values in training indices so we must skip this cross validation round
 
 
-        if IncludeSquares:
-            XTest, XTestSquares, YTest = getFlattenedAndReadyXAndY(test_index, X, Y, True)
+        if IncludeSquares and (not IncludeCubes):
+            XTest, XTestSquares, YTest = getFlattenedAndReadyXAndY(test_index, X, Y, True, False)
         elif IncludeSquares and IncludeCubes:
-            XTest, XTestSquares, XTestCubes, YTest = getFlattenedAndReadyXAndY(test_index, X, Y, True)
+            XTest, XTestSquares, XTestCubes, YTest = getFlattenedAndReadyXAndY(test_index, X, Y, True, True)
         else:
-            XTest, YTest = getFlattenedAndReadyXAndY(test_index, X, Y, False)
+            XTest, YTest = getFlattenedAndReadyXAndY(test_index, X, Y, False, False)
             
         if len(XTest) == 0:
             continue  # No Y Values in test indices so must skip.
@@ -194,6 +202,8 @@ def regularRegressionOnConfigurations(X, Y, TransitionIdForPrinting, IncludeSqua
         MAPEValidationList.append(MAPEValidation)
         
         if IncludeSquares:
+            print ("Length of XTrain Squares {0} ".format(len(XSquaredReady)))
+            print ("Length of XTest Squares {0} ".format(len(XTestSquares)))            
             # Perform Linear Regression With Squares.
             regSquareEstimator  = LinearRegression()
             
@@ -214,12 +224,15 @@ def regularRegressionOnConfigurations(X, Y, TransitionIdForPrinting, IncludeSqua
             MAPEValidationListWithSquares.append(MAPEValidationWithSquares)
             
             if IncludeCubes:
-                # Perform Linear Regression With Squares.                
+                # Perform Linear Regression With Squares.
+                print ("Length of XTrain Cubes {0} ".format(len(XCubedReady)))
+
+                print ("Length of XTest Cubess {0} ".format(len(XTestCubes)))
                 regCubeEstimator  = LinearRegression()
                 
-                regCubeEstimator =  regCubeEstimator.fit(XSquaredReady, YReadyScaled)
+                regCubeEstimator =  regCubeEstimator.fit(XCubedReady, YReadyScaled)
                 
-                YTrainPredictedWithCubes =  regCubeEstimator.predict(XSquaredReady)
+                YTrainPredictedWithCubes =  regCubeEstimator.predict(XCubedReady)
                 
                 YTrainPredictedWithCubesRescaled =  YTrainScaler.inverse_transform(YTrainPredictedWithCubes)
                 
