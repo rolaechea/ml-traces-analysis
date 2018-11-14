@@ -9,8 +9,8 @@ import numpy as np
 
 from sklearn.preprocessing import  StandardScaler
 
-from ConfigurationUtilities import generateBitsetForOneConfiguration, transformFeatureBitmapsToIncludeSquares, \
-transformBitsetToIncludeFeatureCubes
+from ConfigurationUtilities import generateBitsetForOneConfiguration, transformFeatureBitmapsToIncludeSquares
+
 
 
 

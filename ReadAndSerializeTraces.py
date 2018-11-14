@@ -33,7 +33,7 @@ if __name__ == "__main__":
             ArrayOfDictTransitionIdsToValueSet.append(AllFilteredTransitions)
            
 
-    output = open('unsampled-transitions.pkl', 'wb')
+    output = open('FilteredAndSampledTransitions.pkl', 'wb')
     pickle.dump(ArrayOfDictTransitionIdsToValueSet, output, pickle.HIGHEST_PROTOCOL)
     
     output.close()
