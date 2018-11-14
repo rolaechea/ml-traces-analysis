@@ -23,13 +23,15 @@ from sklearn.model_selection import train_test_split
 
 if __name__ == "__main__":
     
-    if  len(sys.argv) > 2:
+    if  len(sys.argv) > 3:
          # First parameter is size of training set, 2nd is name of configurationFile
          TrainingConfSize = int(sys.argv[1])
          TrainingConfFilename = sys.argv[2]
+         OutputFilename = sys.argv[3]
     else:        
         TrainingConfSize = 230
         TrainingConfFilename = "configurationsListing.pkl"
+        OutputFilename = "FilteredAndSampledTransitions.pkl"
     
     trainingSetConfigurations = train_test_split(getAllPossibleIds(), getAllPossibleIds(), train_size=TrainingConfSize, test_size=(2304-TrainingConfSize))[0]
     transitionArrayOfDictionary = []    
@@ -54,7 +56,7 @@ if __name__ == "__main__":
     
     finalArrayDict = downSampleToNewMaxExecutions(mergedDicionary, actualCountsDictionary=allCounts)
         
-    output = open('FilteredAndSampledTransitions.pkl', 'wb')
+    output = open(OutputFilename, 'wb')
     pickle.dump(finalArrayDict, output, pickle.HIGHEST_PROTOCOL)
     output.close()
     
