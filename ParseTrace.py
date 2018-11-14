@@ -41,9 +41,9 @@ def getFilenameFromConfigurationAndRepetition(configuration, repetition):
     return tmpTraceFilename
 
 
-def extractTransitionToBagOfTimesDictionaryFromTraceFile(traceFilename):
+def extractTransitionToBagOfTimesDictionaryFromTraceFile(traceFilename, filterTransition=False, TransitionsToFilter=0):
     """
-    Inputs -- File or list of lines ??
+    Inputs -- Filename
     Output -- Dictionary of Transition Ids to Time taken
     """
     __dictTransitionToTimesBag__ = {}
@@ -54,6 +54,9 @@ def extractTransitionToBagOfTimesDictionaryFromTraceFile(traceFilename):
 #            print (line.rstrip())
         transitionId, timeTaken = line.rstrip().split(":")
         
+        if filterTransition and (int(transitionId)  not in TransitionsToFilter):
+            # skkip transition
+            continue 
         existintTimeTakenList = __dictTransitionToTimesBag__.get(int(transitionId))
         
         if existintTimeTakenList==None:

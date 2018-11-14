@@ -9,7 +9,7 @@ import sys
 import numpy as np
 
 #from sklearn.linear_model import RidgeCV, LassoCV
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
 
 from ParseTrace import extractTransitionToBagOfTimesDictionaryFromTraceFile,  getArrayOfDictTransitionIdsToValueSet
 
