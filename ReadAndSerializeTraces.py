@@ -14,11 +14,11 @@ from ParseTrace import getFilenameFromConfigurationAndRepetition, extractTransit
 
 
 if __name__ == "__main__":
-    if  len(sys.argv) > 1:
-         # First parameter is size of training set
+    if  len(sys.argv) > 2:
          FilesList = [int(configurationId) for  configurationId in (sys.argv[1].split(','))]
+         FilenameOut = sys.argv[2]
     else:        
-        print(" Invalid Usage  - requires a list of configuration ids as first argument")
+        print(" Invalid Usage  - requires a list of configuration ids as first argument, and filename to store their serialization as 2nd argument. ")
         exit(0)
 
     ArrayOfDictTransitionIdsToValueSet = []    
@@ -33,7 +33,7 @@ if __name__ == "__main__":
             ArrayOfDictTransitionIdsToValueSet.append(AllFilteredTransitions)
            
 
-    output = open('FilteredAndSampledTransitions.pkl', 'wb')
+    output = open(FilenameOut, 'wb')
     pickle.dump(ArrayOfDictTransitionIdsToValueSet, output, pickle.HIGHEST_PROTOCOL)
     
     output.close()

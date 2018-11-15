@@ -9,6 +9,8 @@ import math
 import random
 
 
+
+
 def extractLinearArrayTimeTakenForSingleTransition(ArrayOfDictTransitionIdsToValueSet, transitionId):
     """
       Input: 
@@ -30,6 +32,26 @@ def extractLinearArrayTimeTakenForSingleTransition(ArrayOfDictTransitionIdsToVal
     return AllYVals
 
 
+def downSampleSingleDictionary(AnInputDictionary, samplingRatios={}, RatioMultiplier=1.0):
+    """
+    Returns a new dictionary, sampling each transition according to the given sampling ratios multiplied by multiplicator.
+    """
+    sampledDictionary = {}
+    for transitionId in AnInputDictionary.keys():
+        if transitionId in samplingRatios.keys():
+#            print("Sampling Transitions  {0}".format(transitionId))            
+            numExecutions = len(AnInputDictionary[transitionId])
+            
+            numExecutionsToSample = int(math.ceil(numExecutions*samplingRatios[transitionId]*RatioMultiplier))
+            if numExecutionsToSample < numExecutions:
+                sampledDictionary[transitionId] = random.sample(AnInputDictionary[transitionId], numExecutionsToSample)
+            else:
+                sampledDictionary[transitionId] = AnInputDictionary[transitionId]
+                
+    return sampledDictionary
+                
+            
+    
 def downSampleToNewMaxExecutions(inputDictionary, maxPerTransition=500000, actualCountsDictionary={}):
     """
     Input: An array of dicionaries of transitions x Count (one per conf.)
