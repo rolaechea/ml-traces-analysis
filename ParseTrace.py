@@ -70,7 +70,8 @@ def getTransitionToBagOfTimesForAllRepsForAProduct(configurationId):
             if existintTimeTakenList==None:
                 __dictTransitionToTimesBag__[int(transitionId)] = [int(timeTaken)]
             else:
-                __dictTransitionToTimesBag__[int(transitionId)].append(int(timeTaken))    
+                __dictTransitionToTimesBag__[int(transitionId)].append(int(timeTaken))
+        fTrace.close()
     return __dictTransitionToTimesBag__
     
 def extractTransitionToBagOfTimesDictionaryFromTraceFile(traceFilename, filterTransition=False, TransitionsToFilter=0):
@@ -97,13 +98,10 @@ def extractTransitionToBagOfTimesDictionaryFromTraceFile(traceFilename, filterTr
             __dictTransitionToTimesBag__[int(transitionId)].append(int(timeTaken))
         
 #    print ([(x, len(y), np.mean(y)) for x,y in   __dictTransitionToTimesBag__.items()])
-
-    return     __dictTransitionToTimesBag__
-
     fTrace.close()
     
-    
-    return __dictTransitionToTimesBag__
+    return     __dictTransitionToTimesBag__
+
 
 
 def getArrayOfDictTransitionIdsToValueSet(ListProductIds, verbose=True):
