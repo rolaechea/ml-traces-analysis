@@ -14,6 +14,20 @@ def getAllPossibleIds():
     """
     return range(0, 2304)       
 
+def mean_absolute_error_and_stdev_eff(y_true, y_pred):
+    """
+    Requires two arrays of equal dimensions but its much faster than mean_absolute_error.
+    Returns mean absolute error and standard deviaiton of absolute error.
+    """
+    tmpMAE = np.abs(y_true - y_pred)
+    
+    return np.mean(tmpMAE), np.std(tmpMAE)
+
+def mean_absolute_error_eff(y_true, y_pred):
+    """
+    Requires two arrays of equal dimensions but its much faster than mean_absolute_error.
+    """
+    return np.mean(np.abs(y_true - y_pred))
 
 def mean_absolute_error(y_true, y_pred):
     y_true, y_pred = np.array(y_true), np.array(y_pred)
