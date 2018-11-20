@@ -10,12 +10,12 @@ Created on Thu Nov 15 16:37:41 2018
 import numpy as np
 import sys
 
-import pickle
+
 from sklearn.preprocessing import  StandardScaler
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 
 
-from ParseTrace import getTransitionToBagOfTimesForAllRepsForAProduct, getSamplingRatiosDict
+from ParseTrace import getTransitionToBagOfTimesForAllRepsForAProduct, getSamplingRatiosDict, loadObjectFromPickle
 from ConfigurationUtilities import generateBitsetForOneConfiguration, transformFeatureBitmapsToIncludeSquares, \
  mean_absolute_error, mean_absolute_error_eff, mean_absolute_error_and_stdev_eff
 
@@ -32,19 +32,7 @@ lassoRegression = 2
 
 
 
-def loadObjectFromPickle(InputFilename):
-    """
-    Given a filename for pkl file containing assesment, load it and return it.
-    """
 
-        
-    pkl_file = open(InputFilename, 'rb')
-    
-    objectFromPickle = pickle.load(pkl_file)        
-           
-    pkl_file.close()  
-    
-    return objectFromPickle
 
 
 
@@ -88,13 +76,7 @@ def getBestMethodPerTransition(CvResultsFilename):
 def learnRegressorFromDataset(regressorTypeToLearn, transitionId, datasetArrayDict, confsList):
     """
     Calculates the regressor that CV found to be the best using all the data from training
-    """
-    
-#    YLocalScaler =   StandardScaler()
-#
-#    SingleYList = []
-#    [ SingleYList.extend(YBag) for YBag in YLocalArrayOfBags]
-#      
+    """    
     RegressionType = regressorTypeToLearn[0]
     UseSquares = regressorTypeToLearn[1]
     AlphaIndex = regressorTypeToLearn[2]
@@ -208,10 +190,12 @@ if __name__ == "__main__":
         
     print ("Transition Id, YMean_Train, Y_Std_Train, MAE_Train, MAE_Std_Train, YMean_Test, Y_Std_Test, MAE_Test, MAE_Std_Test")
     for transitionId in dictRatios:
-         Regressor, RegressorUseSquares, RegressorIsLasso, YLocalScaler, YMeanTrain, YStdTrain, MAPEYTrain, MAPEStdTrain =  learnRegressorFromDataset(bestRegressorPerTransition[transitionId], transitionId, trainDataset, trainOrderedConfs )    
-#        assessLearntRegressor(transitionId, bestRegressorPerTransition[transitionId])
-         YMeanTest,YStdTest, MAPEYTest, MAEYStdDevTest = calculateTestErrors(Regressor, RegressorUseSquares, RegressorIsLasso, YLocalScaler, transitionId, testDataset, testOrderedConfs)
-         print("{0},{1},{2},{3},{4},{5},{6},{7},{8}".format(transitionId, YMeanTrain[0], YStdTrain[0], MAPEYTrain, MAPEStdTrain, YMeanTest, YStdTest,  MAPEYTest, MAEYStdDevTest))
+         
+        Regressor, RegressorUseSquares, RegressorIsLasso, YLocalScaler, YMeanTrain, YStdTrain, MAPEYTrain, MAPEStdTrain =  learnRegressorFromDataset(bestRegressorPerTransition[transitionId], transitionId, trainDataset, trainOrderedConfs )    
+
+        YMeanTest,YStdTest, MAPEYTest, MAEYStdDevTest = calculateTestErrors(Regressor, RegressorUseSquares, RegressorIsLasso, YLocalScaler, transitionId, testDataset, testOrderedConfs)
+         
+        print("{0},{1},{2},{3},{4},{5},{6},{7},{8}".format(transitionId, YMeanTrain[0], YStdTrain[0], MAPEYTrain, MAPEStdTrain, YMeanTest, YStdTest,  MAPEYTest, MAEYStdDevTest))
     
 
 

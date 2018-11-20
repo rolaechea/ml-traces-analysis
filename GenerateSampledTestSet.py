@@ -6,7 +6,7 @@ Created on Thu Nov 15 16:46:02 2018
 @author: rafaelolaechea
 """
 
-from ParseTrace import getTransitionToBagOfTimesForAllRepsForAProduct, getSamplingRatiosDict
+from ParseTrace import getTransitionToBagOfTimesForAllRepsForAProduct, getSamplingRatiosDict, loadObjectFromPickle, saveObjectToPickleFile
 
 from TransitionDictionaryManipulations import downSampleSingleDictionary, calculatePerTransitionsCounts
 
@@ -39,44 +39,54 @@ if __name__ == "__main__":
         
         assesmentSampledFilename = sys.argv[3]
         
+        if len(sys.argv) > 4:
+            
+            useDifferentialSampling = True
+            
+            preExistingSampledConfsFilename = sys.argv[4]
+            
+            preExistingSampledDatasetFilename =  sys.argv[5]
+        
     else:
-        print("Incorrect usage -  requires 3 filenames parameters train conf pkl, and test conf pkl and test conf sampled")
+        print("Incorrect usage -  requires 3 filenames parameters train conf pkl, and test conf pkl and test conf sampled, with optional 2 more for differential sampling")
         exit(0)
         
     dictRatios =  getSamplingRatiosDict()
-    
-    
+        
     confsTest = getComplementSet(confsTrain)
 
-    # Write out test_set
-    outputConfsTest = open(assesmentConfsFilename, 'wb')
+    saveObjectToPickleFile(assesmentConfsFilename, confsTest)
     
-    pickle.dump(confsTest, outputConfsTest, pickle.HIGHEST_PROTOCOL)
+    if useDifferentialSampling:
+        
+        ConfsAleadySampled = loadObjectFromPickle(preExistingSampledConfsFilename)
+        
+        DatasetAlreadySampled = loadObjectFromPickle(preExistingSampledDatasetFilename)
     
-    outputConfsTest.close()
     
-
     DictionaryArray = []
-    index = 0
+    counter = 0
     for confId in confsTest:
-        if index % 10 == 0:
-            print ("Sampled  {0} out of {1}".format(index, len(confsTest)))
+        if counter % 10 == 0:
+            print ("Sampling  {0} out of {1}".format(counter, len(confsTest)))
             
-        tmpDict = getTransitionToBagOfTimesForAllRepsForAProduct(confId)        
-        
-        sampledDict = downSampleSingleDictionary(tmpDict, dictRatios, 1.111)
-        
+        if confId in ConfsAleadySampled:
+            
+            indexOfConfid = ConfsAleadySampled.index(confId)
+            
+            DictionaryArray.append(DatasetAlreadySampled[indexOfConfid])
+            
+        else:
 
-
-        DictionaryArray.append(sampledDict)
+            tmpDict = getTransitionToBagOfTimesForAllRepsForAProduct(confId)        
         
-        index = index +1            
+            sampledDict = downSampleSingleDictionary(tmpDict, dictRatios, 1.111)
+        
+            DictionaryArray.append(sampledDict)
+        
+        counter = counter +1            
 
+    saveObjectToPickleFile(assesmentSampledFilename, DictionaryArray)
     
-    # Write out test_samples
-    outputSamplesTest = open(assesmentSampledFilename, 'wb')
-    
-    pickle.dump(DictionaryArray, outputSamplesTest, pickle.HIGHEST_PROTOCOL)
-    
-    outputSamplesTest.close()
+
     

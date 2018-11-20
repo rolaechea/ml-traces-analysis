@@ -9,6 +9,8 @@ Created on Tue Nov  6 10:51:56 2018
 
 import numpy as np
 
+import pickle 
+
 __TraceDirectory__ = "../FullTraces/akiyo/"
 __ComputedTraceFilename__ = "traceName.txt"
 
@@ -36,7 +38,31 @@ def getSamplingRatiosDict():
                28:0.00025, 33:0.00018, 34:0.00228 }
     
     return dictRet
+
+                             
+def saveObjectToPickleFile(OutputFilename, objectToSave):
+    pkl_file = open(OutputFilename, 'wb')
     
+    pickle.dump(objectToSave, pkl_file, pickle.HIGHEST_PROTOCOL)
+    
+    pkl_file.close()
+    
+
+    
+def loadObjectFromPickle(InputFilename):
+    """
+    Given a filename for pkl file containing assesment, load it and return it.
+    """
+
+        
+    pkl_file = open(InputFilename, 'rb')
+    
+    objectFromPickle = pickle.load(pkl_file)        
+           
+    pkl_file.close()  
+    
+    return objectFromPickle
+
  
 def getAllTransitionIds():
     """
