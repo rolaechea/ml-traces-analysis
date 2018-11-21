@@ -24,6 +24,9 @@ def getComplementSet(confSet, totalEleements=2304):
         
 if __name__ == "__main__":
 #    x.py conf_train.pkl  sampled_assesment_pkl  test_conf   
+    useDifferentialSamplingExtra = False
+    useDifferentialSampling = False
+
     if   len(sys.argv) > 3:
         
         confTrainFilename = sys.argv[1]        
@@ -46,9 +49,15 @@ if __name__ == "__main__":
             preExistingSampledConfsFilename = sys.argv[4]
             
             preExistingSampledDatasetFilename =  sys.argv[5]
-        
+
+        if len(sys.argv) > 6:
+            useDifferentialSamplingExtra = True
+
+            preExistingSampledConfsFilenameExtra = sys.argv[6]
+
+            preExistingSampledDatasetFilenameExtra =  sys.argv[7]        
     else:
-        print("Incorrect usage -  requires 3 filenames parameters train conf pkl, and test conf pkl and test conf sampled, with optional 2 more for differential sampling")
+        print("Incorrect usage -  requires 3 filenames parameters train conf pkl, and test conf pkl and test conf sampled, with optional 2 (or 4)  more for differential sampling")
         exit(0)
         
     dictRatios =  getSamplingRatiosDict()
@@ -63,18 +72,29 @@ if __name__ == "__main__":
         
         DatasetAlreadySampled = loadObjectFromPickle(preExistingSampledDatasetFilename)
     
-    
+    if useDifferentialSamplingExtra:
+
+        ConfsAleadySampledExtra = loadObjectFromPickle(preExistingSampledConfsFilenameExtra)
+
+        DatasetAlreadySampledExtra = loadObjectFromPickle(preExistingSampledDatasetFilenameExtra)    
+
     DictionaryArray = []
     counter = 0
     for confId in confsTest:
         if counter % 10 == 0:
             print ("Sampling  {0} out of {1}".format(counter, len(confsTest)))
             
-        if confId in ConfsAleadySampled:
+        if (useDifferentialSampling and confId in ConfsAleadySampled):
             
             indexOfConfid = ConfsAleadySampled.index(confId)
             
             DictionaryArray.append(DatasetAlreadySampled[indexOfConfid])
+
+        elif  (useDifferentialSamplingExtra and confId in ConfsAleadySampledExtra):
+
+            indexOfConfid = ConfsAleadySampledExtra.index(confId)
+
+            DictionaryArray.append(DatasetAlreadySampledExtra[indexOfConfid])
             
         else:
 
