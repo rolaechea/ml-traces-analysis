@@ -6,11 +6,11 @@ Created on Thu Nov 15 16:46:02 2018
 @author: rafaelolaechea
 """
 
-from ParseTrace import getTransitionToBagOfTimesForAllRepsForAProduct, getSamplingRatiosDict, loadObjectFromPickle, saveObjectToPickleFile
+from ParseTrace import getTransitionToBagOfTimesForAllRepsForAProduct,  loadObjectFromPickle, saveObjectToPickleFile, getTestSetSamplingRatiosDict
 
-from TransitionDictionaryManipulations import downSampleSingleDictionary, calculatePerTransitionsCounts
+from TransitionDictionaryManipulations import downSampleSingleDictionary
 
-import numpy as np
+
 import sys
 
 import pickle
@@ -35,8 +35,7 @@ if __name__ == "__main__":
     
         confsTrain = pickle.load(pkl_file)        
            
-        pkl_file.close()  
-                
+        pkl_file.close()                  
        
         assesmentConfsFilename = sys.argv[2]
         
@@ -60,7 +59,7 @@ if __name__ == "__main__":
         print("Incorrect usage -  requires 3 filenames parameters train conf pkl, and test conf pkl and test conf sampled, with optional 2 (or 4)  more for differential sampling")
         exit(0)
         
-    dictRatios =  getSamplingRatiosDict()
+    dictRatios = getTestSetSamplingRatiosDict()
         
     confsTest = getComplementSet(confsTrain)
 
@@ -100,7 +99,7 @@ if __name__ == "__main__":
 
             tmpDict = getTransitionToBagOfTimesForAllRepsForAProduct(confId)        
         
-            sampledDict = downSampleSingleDictionary(tmpDict, dictRatios, 1.111)
+            sampledDict = downSampleSingleDictionary(tmpDict, dictRatios)
         
             DictionaryArray.append(sampledDict)
         

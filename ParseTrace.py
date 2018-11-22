@@ -27,9 +27,21 @@ __transitionIds__ = [2,3,4,6,7,8, 9 ]
 __currentRep__ = 1
 
 
+def getTestSetSamplingRatiosDict():
+    """
+    Assuming test size testSetSize= 2304-460
+    """
+    dictRet = {4: 0.08902, 5:0.00023,  6:0.09038, 7:0.09038, \
+               8:0.09008, 9:0.01369, 10:0.00147, 11:0.00061, 12:0.00050, \
+               13:0.01263, 14:0.00090, 15:0.00110, 18:0.00050, 19:0.00261,\
+               20:0.00337, 21:0.00131, 23:0.01540, 24:0.00679, 25:0.00679,\
+               28:0.00050, 33:0.00023, 34:0.01214 }
+    
+    return dictRet
+
 def getSamplingRatiosDict():
     """
-    Sampling Ratios for transitions 4 ... 34.
+    Sampling Ratios for transitions 4 ... 34 (this are wrong for test set / train set)
     """
     dictRet = {4: 0.07125, 5:0.00018,  6:0.07234, 7:0.07234, \
                8:0.07210, 9:0.01096, 10:0.00063, 11:0.00049, 12:0.00025, \
@@ -129,6 +141,30 @@ def extractTransitionToBagOfTimesDictionaryFromTraceFile(traceFilename, filterTr
     return     __dictTransitionToTimesBag__
 
 
+def sumTimeTakenPerTransitionFromConfigurationAndRep(configurationId, repId):
+    
+    traceFilename = getFilenameFromConfigurationAndRepetition(configurationId, repId)
+
+    fTrace = open(traceFilename, 'r')
+
+    dictTransitionTimeTotalTimeTaken = {}
+    
+    for line in fTrace:
+#            print (line.rstrip())
+        transitionId, timeTaken = line.rstrip().split(":")
+    
+        existintTimeTakenList = dictTransitionTimeTotalTimeTaken.get(int(transitionId))
+        
+        # Add time if transition already exists, otherwise insert time.
+        if existintTimeTakenList==None:
+            dictTransitionTimeTotalTimeTaken[int(transitionId)] = (1, int(timeTaken))
+        else:
+            dictTransitionTimeTotalTimeTaken[int(transitionId)] =  (dictTransitionTimeTotalTimeTaken[int(transitionId)][0] + 1 , dictTransitionTimeTotalTimeTaken[int(transitionId)][1] + int(timeTaken))
+
+    fTrace.close()
+    
+    return dictTransitionTimeTotalTimeTaken
+            
 
 def getArrayOfDictTransitionIdsToValueSet(ListProductIds, verbose=True):
     """
