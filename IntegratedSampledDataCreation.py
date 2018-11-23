@@ -38,7 +38,7 @@ if __name__ == "__main__":
          if len(sys.argv) > 4 and sys.argv[4] == "debug":
              verboseDebug = True
     else:        
-        print(" Incorrect Usage. Requires three parameters: # of configurations in train. size, file to save training set ids, file to save filtered dataset")
+        print(" Incorrect Usage. Requires three parameters: # of configurations in train. size, file to save training set ids, file to save filtered dataset and optional debug parameter")
     
     trainingSetConfigurations = train_test_split(getAllPossibleIds(), getAllPossibleIds(), train_size=TrainingConfSize, test_size=(2304-TrainingConfSize))[0]
    
@@ -50,7 +50,7 @@ if __name__ == "__main__":
         call(["free", "-h"])
 
     globalCounts = {}
-    for outerPart in range(0, 3):
+    for outerPart in range(0, 23):
         transitionArrayOfDictionary = []    
 
         smallSet = trainingSetConfigurations[outerPart*20:(outerPart*20)+20]
@@ -59,19 +59,17 @@ if __name__ == "__main__":
             print("At subloop {0}, memory status :".format(outerPart))
             call(["free", "-h"])        
 
-        for configurationId in smallSet[0:20]:
-            loopCountT = 0
+
+        for configurationId in smallSet:
+
             for repId in range(1,11):            
+
                 traceFilename = getFilenameFromConfigurationAndRepetition(configurationId, repId)
 
-#                if (repId == 1) and  ((loopCountT % 1) == 0):                
-#                    print("Parsing Configuration {0} repetition {1} trace Filename {2} {3}".format(configurationId, repId, traceFilename, loopCountT))
-#                    print(datetime.datetime.now().time())
-#                    call(["free", "-h"])
                 AllTransitions = extractTransitionToBagOfTimesDictionaryFromTraceFile(traceFilename )
 
                 transitionArrayOfDictionary.append(AllTransitions)
-            loopCountT = loopCountT + 1
+
         
         if verboseDebug:
             print("Possible Peak subloop memory at loop  {0}".format(outerPart))
@@ -114,7 +112,7 @@ if __name__ == "__main__":
         call(["free", "-h"])
 
     GlobalTmpFinalArray = []      
-    for outerIndex in range(0, 3):
+    for outerIndex in range(0, 23):
         if verboseDebug:
             print("Memory Start Loading Loop at {0}".format(outerIndex))
             call(["free", "-h"])         
@@ -145,20 +143,6 @@ if __name__ == "__main__":
          print("Saving Final Dictionary of length {0}".format(len(GlobalTmpFinalArray)))
          
     saveObjectToPickleFile(OutputFilename, GlobalTmpFinalArray)
-#    print("downsampling")
 
-#    print(datetime.datetime.now().time())
-    
-#    finalArrayDict = downSampleToNewMaxExecutions(mergedDicionary, actualCountsDictionary=allCounts)
-
-#    print("saving")
-    
-#   print(datetime.datetime.now().time())
-
-#    output = open(OutputFilename, 'wb')
-#    pickle.dump(finalArrayDict, output, pickle.HIGHEST_PROTOCOL)
-#    pickle.dump(mergedDictionary, output, pickle.HIGHEST_PROTOCOL)    
-#    output.close()
-    
     
 
