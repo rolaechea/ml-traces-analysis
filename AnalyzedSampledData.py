@@ -22,9 +22,10 @@ from TransitionDictionaryManipulations import extractLinearArrayTimeTakenForSing
 from ConfigurationUtilities  import mean_absolute_error, mean_absolute_error_eff
 
 
-excludedTransitions = (16, 17, 22,26, 27, 29, 30,31, 32)
+# Error 27 incorrectly excluded
+excludedTransitions = (16, 17, 22,26, 29, 30,31, 32)
 
-alphaValuesList =  [0.001, 0.01, 0.1, 1.0, 10.0] # [0.1, 1.0, 10.0]
+alphaValuesList =  [0.001, 0.01, 0.1, 1.0, 10.0] 
 
 if __name__ == "__main__":
     if   len(sys.argv) > 2:
