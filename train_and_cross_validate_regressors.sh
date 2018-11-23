@@ -1,5 +1,5 @@
-python AnalyzedSampledData.py train_conf_460_rep_3.pkl sampled_460_rep_1.pkl > results_460_rep_1.csv
-python AnalyzedSampledData.py train_conf_460_rep_3.pkl sampled_460_rep_2.pkl > results_460_rep_2.csv
+python AnalyzedSampledData.py train_conf_460_rep_1.pkl sampled_460_rep_1.pkl > results_460_rep_1.csv
+python AnalyzedSampledData.py train_conf_460_rep_2.pkl sampled_460_rep_2.pkl > results_460_rep_2.csv
 python AnalyzedSampledData.py train_conf_460_rep_3.pkl sampled_460_rep_3.pkl > results_460_rep_3.csv
 python AnalyzedSampledData.py train_conf_460_rep_4.pkl sampled_460_rep_4.pkl > results_460_rep_4.csv
 python AnalyzedSampledData.py train_conf_460_rep_5.pkl sampled_460_rep_5.pkl > results_460_rep_5.csv
