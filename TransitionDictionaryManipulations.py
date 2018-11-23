@@ -50,7 +50,14 @@ def downSampleSingleDictionary(AnInputDictionary, samplingRatios={}, RatioMultip
                 
     return sampledDictionary
                 
-            
+
+
+def addCountDictionaries(firstCountDictionary, secondCountDictionary):
+    for transitionId in secondCountDictionary.keys():
+        if secondCountDictionary in firstCountDictionary.keys():
+            firstCountDictionary[transitionId] = firstCountDictionary[transitionId] + secondCountDictionary[transitionId]
+        else:
+            firstCountDictionary[transitionId] = secondCountDictionary[transitionId]
     
 def downSampleToNewMaxExecutions(inputDictionary, maxPerTransition=500000, actualCountsDictionary={}):
     """

@@ -29,11 +29,6 @@ alphaValues = [0.001, 0.01, 0.1, 1.0, 10.0]
 
 
 
-
-
-
-
-
 def learnRegressorFromDataset(regressorTypeToLearn, transitionId, datasetArrayDict, confsList):
     """
     Calculates the regressor that CV found to be the best using all the data from training
@@ -54,10 +49,6 @@ def learnRegressorFromDataset(regressorTypeToLearn, transitionId, datasetArrayDi
     SingleYScaledList = YLocalScaler.transform ([[aY] for aY in SingleYList])
 
     XBitmaps = getXBitmapsForRegression(confsList, YSet, UseSquares)
-
-
-#    print ("Transition {0} has  {1} configruations,  a total of {2} y values,  a mean of {3} and a std. dev. of {4}. Conf 0 includes {5} repetitions of y, length of X is {6}".format(transitionId, \
-#           len(YSet), len(SingleYList), YLocalScaler.mean_, np.sqrt(YLocalScaler.var_), len(YSet[0]), len(XBitmaps)))
     
     if  RegressionType == MLConstants.simpleRegression:
         Regressor = LinearRegression()
@@ -70,20 +61,14 @@ def learnRegressorFromDataset(regressorTypeToLearn, transitionId, datasetArrayDi
     
     YPredicted = YLocalScaler.inverse_transform(Regressor.predict(XBitmaps))
 
-
-   
-
     YOriginalArray = np.array(SingleYList) ; YOriginalArray.resize((len(SingleYList), 1))
 
     # Standarize as Lasso returns array of different shape than linear and ridge regression.    
     if RegressionType == MLConstants.lassoRegression:
         YPredicted.resize( (len(SingleYList), 1))
         
-
     MAPEYTrain, MAPEStdTrain = mean_absolute_error_and_stdev_eff(YOriginalArray, YPredicted)
-    
-#    print("Y E_Train : {0}".format(MAPEYTrain))
-      
+          
     return Regressor, UseSquares, RegressionType == MLConstants.lassoRegression, YLocalScaler, YLocalScaler.mean_,  np.sqrt(YLocalScaler.var_), MAPEYTrain, MAPEStdTrain
 
 
