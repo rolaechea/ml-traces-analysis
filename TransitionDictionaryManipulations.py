@@ -53,6 +53,9 @@ def downSampleSingleDictionary(AnInputDictionary, samplingRatios={}, RatioMultip
 
 
 def addCountDictionaries(firstCountDictionary, secondCountDictionary):
+    """
+    Semantically add the counts from secondCountDictionary to firstCountDictionary.
+    """
     for transitionId in secondCountDictionary.keys():
         if secondCountDictionary in firstCountDictionary.keys():
             firstCountDictionary[transitionId] = firstCountDictionary[transitionId] + secondCountDictionary[transitionId]
