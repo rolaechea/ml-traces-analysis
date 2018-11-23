@@ -21,9 +21,6 @@ __trainingSetSize__ = 2304
 
 __numberTransitions__ = 35
 
-__transitionIds__ = [2,3,4,6,7,8, 9 ] 
-# And 34 13, 31, 33, 5, 7, 4, 11, 14, 18, 30, 10, 16, 19, 17, 20, 32]
-
 __currentRep__ = 1
 
 
@@ -76,13 +73,6 @@ def loadObjectFromPickle(InputFilename):
     return objectFromPickle
 
  
-def getAllTransitionIds():
-    """
-    Returns a list of all transition identifiers
-    """
-    return __transitionIds__
-
-
 def getFilenameFromConfigurationAndRepetition(configuration, repetition):
     """
     Returns a resolved filename based on given configuration and repetition
