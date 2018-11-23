@@ -41,7 +41,7 @@ if __name__ == "__main__":
     trainingSetConfigurations = train_test_split(getAllPossibleIds(), getAllPossibleIds(), train_size=TrainingConfSize, test_size=(2304-TrainingConfSize))[0]
    
     
-    ConfSerialization =  saveObjectToPickleFile(TrainingConfFilename)
+    ConfSerialization =  saveObjectToPickleFile(TrainingConfFilename, trainingSetConfigurations)
 
     if  verboseDebug:
         print("Memory Information at Program Launch ")
