@@ -123,7 +123,7 @@ if __name__ == "__main__":
             print("Loading Memory Peak I at {0}".format(outerIndex))
             call(["free", "-h"])        
         
-        TmpFinalArrayDict = downSampleToNewMaxExecutions(unsampledMergedDictArray, maxPerTransition=10000, actualCountsDictionary=globalCounts)
+        TmpFinalArrayDict = downSampleToNewMaxExecutions(unsampledMergedDictArray, actualCountsDictionary=globalCounts)
 
         if verboseDebug:
             print("Loading Memory Peak II at {0}".format(outerIndex))
