@@ -69,23 +69,29 @@ def downSampleToNewMaxExecutions(inputDictionary, maxPerTransition=500000, actua
     """
     newArrayOfDictionaries  = []
     SamplingRatios = {}
+    
     for transitionId in actualCountsDictionary.keys():
         if actualCountsDictionary[transitionId] > maxPerTransition:
-            SamplingRatios[transitionId] = maxPerTransition / actualCountsDictionary[transitionId] 
+            SamplingRatios[transitionId] = maxPerTransition / actualCountsDictionary[transitionId]
+#            print("sampling for transition {0} as actualCounts = {1}, ratio = {2}".format(transitionId, actualCountsDictionary[transitionId], SamplingRatios[transitionId]))     
         else:
             SamplingRatios[transitionId] = 1.0
+#            print("Not sampling for transition {0} as actualCounts = {1}, ratio={2}".format(transitionId, actualCountsDictionary[transitionId], SamplingRatios[transitionId]))
 #        print( "For transition {1}, will sample only {0} % of all its executions. ".format(SamplingRatios[transitionId]*100.0, transitionId))             
     
     for perConfDict in inputDictionary:
         sampledPerConfDictionary = {}
+#        print("StartConfSampling")
         for transitionId in perConfDict.keys():
             numExecutions = len(perConfDict[transitionId])
             numberToSample = int(math.ceil(numExecutions*SamplingRatios[transitionId]))
             
             if sampledPerConfDictionary == 1.0 or numberToSample==numExecutions:
                 sampledPerConfDictionary[transitionId] = perConfDict[transitionId] # no sampling at all required
+#                print("Skipped Sampling for transition {0},  , numberToSample = {1}, numExecutions={2}, received={3}".format(transitionId, numberToSample, numExecutions, len(sampledPerConfDictionary[transitionId])))               
             else:
                 sampledPerConfDictionary[transitionId] = random.sample(perConfDict[transitionId], numberToSample)
+#                print("Sampling for transition {0},  {0},  , numberToSample = {1}, numExecutions={2}, received={3}".format(transitionId, numberToSample, numExecutions, len(sampledPerConfDictionary[transitionId])))           
         newArrayOfDictionaries.append(sampledPerConfDictionary)
     
 #            print( "Sampling {0} % of all executed transitions with id = {1}, giving {2} samples out of  {3} ".format(SamplingRatios[transitionId]*100.0, \
