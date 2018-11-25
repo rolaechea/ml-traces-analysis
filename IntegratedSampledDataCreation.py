@@ -105,19 +105,20 @@ if __name__ == "__main__":
     
     if verboseDebug:
         print("Completed")
-        print (globalCounts)
+        print ("globalCounts: {0}".format(globalCounts))
     
     if verboseDebug:
         print("Final Memory Before Shutdown")
         call(["free", "-h"])
 
+    
     GlobalTmpFinalArray = []      
     for outerIndex in range(0, 23):
         if verboseDebug:
             print("Memory Start Loading Loop at {0}".format(outerIndex))
             call(["free", "-h"])         
         
-        unsampledMergedDictArray = loadObjectFromPickle(temporaryFilenameTemplate.format(outerPart))
+        unsampledMergedDictArray = loadObjectFromPickle(temporaryFilenameTemplate.format(outerIndex))
         
         if verboseDebug:
             print("Loading Memory Peak I at {0}".format(outerIndex))
