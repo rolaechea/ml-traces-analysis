@@ -63,7 +63,7 @@ if __name__ == "__main__":
     assert(len(trainingSetConfigurations)==len(transitionArrayOfDictionary))
     
     
-#    alphaValuesList = [0.5, 1.0, 1.5, 2.0, 10.0, 15.0]
+
     
     KValue = 5
     kf = KFold(n_splits=KValue, shuffle=True)
@@ -71,8 +71,6 @@ if __name__ == "__main__":
     allCounts = calculatePerTransitionsCounts(transitionArrayOfDictionary)
     
     
-#    print(allCounts)
-# , Linear Triplets MAPE Average Train, Linear Triplets MAPE Average Validation"    
     if outputHeader:
         print("Transition Id, Linear MAPE Average Train , Linear MAPE Average Validation,RMS_T,RMS_V, Linear Squares MAPE Average Train , Linear Squares MAPE Average Validation,RMS_T, RMS_V, Average Y, {0}, {1}, {2}, {3}, {4}".format(\
           ','.join(["Ridge_Train_"+str(alpha)+", Ridge_Validation__"+str(alpha)+",RMS_T,RMS_V" for alpha in alphaValuesList]),
@@ -97,7 +95,6 @@ if __name__ == "__main__":
         RMSTrainList =[[], []]
         RMSValidationList =[[], []]
 
-#        print ("Size of Yset ", len(YSet))
         alphasMapeTrain = [[[],[],[],[]] for x in alphaValuesList]        
         alphasMapeValidation = [[[],[],[],[]]  for x in alphaValuesList]
 
@@ -105,20 +102,15 @@ if __name__ == "__main__":
         alphasRMSValidation = [[[],[],[],[]]  for x in alphaValuesList]
 
         for train_index, test_index in kf.split(trainingSetConfigurations):
-#            print ("AT cross validaiton iteration ")
             YTrainScaledValues, YScaler, TrainHasYVals = getScaledYForProductSet(train_index, YSet)
             
             if TrainHasYVals == False:
-#                print ("Skipping as TrainHasYVals is False")                
                 continue
             
             YTrainOriginal = YScaler.inverse_transform(YTrainScaledValues) # Extract corresponding Y original original through back transformation from scaled Y
-
-#            print ("YtrainOriginal[0] ={0}".format(YTrainOriginal[0]))
             
             XTrainRepeated, XTrainSquareRepeated = getFlattenedXAndDependents(train_index, trainingSetConfigurations, YSet)
 
-#            print ("XtrainRepeated[0] ={0}".format(XTrainRepeated[0]))
 
             assert(len(YTrainScaledValues)==len(XTrainRepeated))
             assert(len(YTrainScaledValues)==len(XTrainSquareRepeated))
@@ -126,7 +118,6 @@ if __name__ == "__main__":
             XTest, XTestSquares = getFlattenedXAndDependents(test_index, trainingSetConfigurations, YSet)
             
             if len(XTest) == 0:
-#                print ("Skipping as XTest Lenght = 0")
                 continue # No Y Values in test indices so must skip.
             
             YTest = getFlattenedOnlyYForProductSet(test_index, YSet)
@@ -142,10 +133,6 @@ if __name__ == "__main__":
                 
                 YTrainPredicted = YScaler.inverse_transform(allLinearEsimators[index].predict(allLinearXTrain[index]))
 
-#                print("Linear YtrainPredicted[0]={0}".format(YTrainPredicted[0]))
-
-                
-
                 
                 MAPETrain = mean_absolute_error_eff(YTrainOriginal, YTrainPredicted)
                 RMSTrain =  mean_squared_error(YTrainOriginal, YTrainPredicted)
@@ -160,8 +147,7 @@ if __name__ == "__main__":
 
                 # Transform Ytest to np array for performance reasons.
                 YTest = np.array(YTest)
-                
-                
+                                
                 MAPEValidation = mean_absolute_error_eff(YTest, YTestPredicted)
                 RMSValidation  =  mean_squared_error(YTest, YTestPredicted)
 
@@ -210,11 +196,9 @@ if __name__ == "__main__":
 
             RidgeSingleTrainRMS = [np.mean(aMapePairList[0]) for aMapePairList in alphasRMSTrain]
             RidgeSingleValidationRMS= [np.mean(aMapePairList[0]) for aMapePairList in alphasRMSValidation]            
-#            print("Size RidgeSingleTrainMape {0} ".format(len(RidgeSingleTrainMape)))          
-#            print("Size RidgeSingleValidationMape {0} ", len(RidgeSingleValidationMape))
             
             JointSingleRidgeStrArray = [str(a)+","+str(b)+","+str(c)+","+str(d) for a,b,c,d in zip(RidgeSingleTrainMape, RidgeSingleValidationMape, RidgeSingleTrainRMS, RidgeSingleValidationRMS)]
-#            print("Size of JointSingleRidge Ridge {0}", len(JointSingleRidgeStrArray))
+
             
             RidgeSquareTrainMape = [np.mean(aMapePairList[1]) for aMapePairList in alphasMapeTrain]
             RidgeSquareValidationMape = [np.mean(aMapePairList[1]) for aMapePairList in alphasMapeValidation]
@@ -223,12 +207,8 @@ if __name__ == "__main__":
             RidgeSquareValidationRMS = [np.mean(aMapePairList[1]) for aMapePairList in alphasRMSValidation]
 
             
-#            print("Size RidgeSingleTrainMape {0} ", len(RidgeSquareTrainMape))            
-#            print("Size RidgeSingleValidationMape {0} ", len(RidgeSquareValidationMape))            
             JointSquareRidgeStrArray = [str(a)+","+str(b)+","+str(c)+","+str(d) for a,b,c,d in zip(RidgeSquareTrainMape, RidgeSquareValidationMape, RidgeSquareTrainRMS, RidgeSquareValidationRMS)]
-#            print("Size of Joint Square Ridge {0}", len(JointSquareRidgeStrArray))
 
-#
 # Lasso Best            
             LassoSingleTrainMape = [np.mean(aMapePairList[2]) for aMapePairList in alphasMapeTrain]
             LassoSingleValidationMape = [np.mean(aMapePairList[2]) for aMapePairList in alphasMapeValidation]            
@@ -258,7 +238,6 @@ if __name__ == "__main__":
             SquareLinearMapeValidation =   np.mean(MAPEValidationList[1])
             SquareLinearRMSValidation = np.mean(RMSValidationList[1])
 
-
             BestMethodIndex = np.argmin([SingleLinearMapeValidation, SquareLinearMapeValidation, RidgeSingleValidationMape[BestSingleRidgeValidation], \
                        RidgeSquareValidationMape[BestSquareRidgeValidation], LassoSingleValidationMape[BestSingleLassoValidation], \
                        LassoSquareValidationMape[BestSquareLassoValidation]])
@@ -280,8 +259,3 @@ if __name__ == "__main__":
                    ','.join(JointSingleRidgeStrArray), ','.join(JointSquareRidgeStrArray), \
                    ','.join(JointSingleLassoStrArray), ','.join(JointSquareLassoStrArray), \
                    BestMethodName, SupplementalBestMethodIndex))
-            
-            
-            
-            
-        
