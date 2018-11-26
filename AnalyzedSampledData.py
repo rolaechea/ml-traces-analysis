@@ -19,7 +19,7 @@ from ResponsesManipulations import getScaledYForProductSet, getFlattenedXAndDepe
 getFlattenedOnlyYForProductSet
 
 from TransitionDictionaryManipulations import extractLinearArrayTimeTakenForSingleTransition, calculatePerTransitionsCounts
-from ConfigurationUtilities  import mean_absolute_error, mean_absolute_error_eff
+from ConfigurationUtilities  import mean_absolute_error_eff
 
 
 # Error 27 incorrectly excluded
@@ -28,11 +28,20 @@ excludedTransitions = (16, 17, 22,26, 29, 30,31, 32)
 alphaValuesList =  [0.001, 0.01, 0.1, 1.0, 10.0] 
 
 if __name__ == "__main__":
+    sampleSingleTransition = False
+    singleTransitionToSample = 0
+    outputHeader = True
+    
     if   len(sys.argv) > 2:
         confFilename = sys.argv[1]
         
         inputFilename = sys.argv[2]        
-                                               
+
+        if len(sys.argv) > 3:
+            sampleSingleTransition = True
+            singleTransitionToSample = int(sys.argv[3])
+            
+            outputHeader = False            
     else:
   
         print(" Invalid Usage. Requires filename of pre downsampled and conjoined array of dictionary of transitions x times for N configurations".format(sys.argv[0]))
@@ -64,14 +73,21 @@ if __name__ == "__main__":
     
 #    print(allCounts)
 # , Linear Triplets MAPE Average Train, Linear Triplets MAPE Average Validation"    
-    print("Transition Id, Linear MAPE Average Train , Linear MAPE Average Validation,RMS_T,RMS_V, Linear Squares MAPE Average Train , Linear Squares MAPE Average Validation,RMS_T, RMS_V, Average Y, {0}, {1}, {2}, {3}, {4}".format(\
+    if outputHeader:
+        print("Transition Id, Linear MAPE Average Train , Linear MAPE Average Validation,RMS_T,RMS_V, Linear Squares MAPE Average Train , Linear Squares MAPE Average Validation,RMS_T, RMS_V, Average Y, {0}, {1}, {2}, {3}, {4}".format(\
           ','.join(["Ridge_Train_"+str(alpha)+", Ridge_Validation__"+str(alpha)+",RMS_T,RMS_V" for alpha in alphaValuesList]),
           ','.join(["Ridge_Square_Train_"+str(alpha)+", Ridge_Square_Validation__"+str(alpha)+",RMS_T,RMS_V" for alpha in alphaValuesList]), \
           ','.join(["Lasso_Train_"+str(alpha)+", Lasso_Validation_"+str(alpha)+",RMS_T,RMS_V"  for alpha in alphaValuesList]),\
           ','.join(["Lasso_Square_Train_"+str(alpha)+", Lasso_Square_Validation__"+str(alpha)+",RMS_T,RMS_V"  for alpha in alphaValuesList]), \
           "Best Method, Supplemental Best Method Index"))
     
-    for transitionId in [tmpTransition for tmpTransition in allCounts.keys() if tmpTransition not in excludedTransitions]:
+    if sampleSingleTransition == True:
+        listTransitionsToSample = [singleTransitionToSample]
+    else:
+        listTransitionsToSample = [tmpTransition for tmpTransition in allCounts.keys() if tmpTransition not in excludedTransitions]        
+
+    
+    for transitionId in listTransitionsToSample:
 
         YSet = extractLinearArrayTimeTakenForSingleTransition(transitionArrayOfDictionary, transitionId)
 
@@ -177,7 +193,7 @@ if __name__ == "__main__":
                     if index >= 2:
                         YTestRidgePredicted = np.array([[y] for y in YTestRidgePredicted])
                                        
-                    MAPEValidation = mean_absolute_error(YTest, YTestRidgePredicted)
+                    MAPEValidation = mean_absolute_error_eff(YTest, YTestRidgePredicted)
                     RMSValidation = mean_squared_error(YTest, YTestRidgePredicted)
 
                     alphasMapeValidation[alphaIndex][index].append(MAPEValidation)
