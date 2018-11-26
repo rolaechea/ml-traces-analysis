@@ -29,10 +29,6 @@ def getFlattenedXAndDependents(productIndices, XList, Ylist):
     XBitmapsSquared = transformFeatureBitmapsToIncludeSquares(XBitmaps)
             
     XBitmapsSquaredRepeated = np.repeat(XBitmapsSquared, [len(YBag) for YBag  in YLocalArrayOfBags], axis=0)
-
-#    XBitmapsCubed  = transformBitsetToIncludeFeatureCubes(XBitmaps)
-#
-#    XBitmapsCubedRepeated = np.repeat(XBitmapsCubed, [len(YBag) for YBag  in YLocalArrayOfBags], axis=0)
            
     return XBitmapsRepeated, XBitmapsSquaredRepeated #, XBitmapsCubedRepeated
     
@@ -48,8 +44,11 @@ def getScaledYForProductSet(productIndices, YValsListOfLists):
     YLocalArrayOfBags = [YValsListOfLists[xIndex] for xIndex in productIndices]
     
     SingleYList = []
+    
     [ SingleYList.extend(YBag) for YBag in YLocalArrayOfBags]
+    
     if len(SingleYList) == 0:
+    
         return None, None, False
     
     YLocalScaler =   StandardScaler()
@@ -57,8 +56,7 @@ def getScaledYForProductSet(productIndices, YValsListOfLists):
     YLocalScaler.fit([[target] for target in  SingleYList])
         
     SingleYScaledList = YLocalScaler.transform ([[aY] for aY in SingleYList])
-    
-    
+        
     return (SingleYScaledList, YLocalScaler, True)    
      
 def getFlattenedOnlyYForProductSet(productIndices, YValsListOfLists):

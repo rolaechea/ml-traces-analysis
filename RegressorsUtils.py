@@ -54,6 +54,9 @@ class TransitionRegressorWrappper:
         
         elif (type(self.regressor) == Lasso):
             return MLConstants.lassoRegression
+    
+    def isLasso(self):
+        return type(self.regressor) == Lasso
 
 
 
