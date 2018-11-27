@@ -12,8 +12,8 @@ import numpy as np
 from sklearn.preprocessing import  StandardScaler
 
 from ConfigurationUtilities import generateBitsetForOneConfiguration, transformFeatureBitmapsToIncludeSquares, mean_absolute_error_and_stdev_eff
-from ParseTrace import  loadObjectFromPickle, sumTimeTakenPerTransitionFromConfigurationAndRep
-
+from ParseTrace import  sumTimeTakenPerTransitionFromConfigurationAndRep
+from pickleFacade import loadObjectFromPickle
 
 
 

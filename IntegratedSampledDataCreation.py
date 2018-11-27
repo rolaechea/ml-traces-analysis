@@ -9,10 +9,9 @@ import sys
 
 
 
+from pickleFacade import saveObjectToPickleFile, loadObjectFromPickle
 
-
-from ParseTrace import getFilenameFromConfigurationAndRepetition, extractTransitionToBagOfTimesDictionaryFromTraceFile, \
-saveObjectToPickleFile, loadObjectFromPickle
+from ParseTrace import getFilenameFromConfigurationAndRepetition, extractTransitionToBagOfTimesDictionaryFromTraceFile
 
 from TransitionDictionaryManipulations import conjoinRepetedDictionaries, calculatePerTransitionsCounts, addCountDictionaries, \
 downSampleToNewMaxExecutions

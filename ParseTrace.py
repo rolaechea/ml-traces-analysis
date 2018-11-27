@@ -7,9 +7,6 @@ Created on Tue Nov  6 10:51:56 2018
 """
 
 
-import numpy as np
-
-import pickle 
 
 __TraceDirectory__ = "../FullTraces/akiyo/"
 __ComputedTraceFilename__ = "traceName.txt"
@@ -17,11 +14,6 @@ __ComputedTraceFilename__ = "traceName.txt"
 __BaseTraceFilename__ = "conf-%d-rep-%d-timing.txt"
 
 
-__trainingSetSize__ = 2304
-
-__numberTransitions__ = 35
-
-__currentRep__ = 1
 
 
 def getTestSetSamplingRatiosDict():
@@ -49,28 +41,6 @@ def getSamplingRatiosDict():
     return dictRet
 
                              
-def saveObjectToPickleFile(OutputFilename, objectToSave):
-    pkl_file = open(OutputFilename, 'wb')
-    
-    pickle.dump(objectToSave, pkl_file, pickle.HIGHEST_PROTOCOL)
-    
-    pkl_file.close()
-    
-
-    
-def loadObjectFromPickle(InputFilename):
-    """
-    Given a filename for pkl file containing assesment, load it and return it.
-    """
-
-        
-    pkl_file = open(InputFilename, 'rb')
-    
-    objectFromPickle = pickle.load(pkl_file)        
-           
-    pkl_file.close()  
-    
-    return objectFromPickle
 
  
 def getFilenameFromConfigurationAndRepetition(configuration, repetition):

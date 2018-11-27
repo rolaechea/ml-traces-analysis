@@ -17,7 +17,9 @@ from sklearn.linear_model import LinearRegression, Ridge, Lasso
 
 import MLConstants
 
-from ParseTrace import  getSamplingRatiosDict, loadObjectFromPickle
+from pickleFacade import loadObjectFromPickle
+
+from ParseTrace import  getSamplingRatiosDict
 
 from ConfigurationUtilities import   mean_absolute_error_and_stdev_eff
 

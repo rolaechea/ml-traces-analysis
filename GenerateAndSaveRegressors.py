@@ -7,7 +7,8 @@ Created on Wed Nov 21 16:03:51 2018
 """
 import sys
 
-from ParseTrace import loadObjectFromPickle, getSamplingRatiosDict, saveObjectToPickleFile
+from pickleFacade import loadObjectFromPickle, saveObjectToPickleFile
+from ParseTrace import  getSamplingRatiosDict
 
 from sklearn.preprocessing import  StandardScaler
 from RegressorsUtils import  getBestMethodPerTransition,  crateRegressorWrapperFromTuple
@@ -15,13 +16,16 @@ from TransitionDictionaryManipulations import extractLinearArrayTimeTakenForSing
 
 from RegressorsUtils import getXBitmapsForRegression
 
+import itertools
+
+
 def FitTrainDataFroRegressor(theRegressor, trainOrderedConfs, trainDataset):
     """
-    Given a regressor wrapper (already initialized), fit the data (including setting the scaler appropiately for regressor)
+    Given a regressor wrapper (already initialized), fit the data (including storing  the scaler in the  regressor)
     """
     YSet = extractLinearArrayTimeTakenForSingleTransition(trainDataset, theRegressor.getTransitionId())
-    SingleYList = []
-    [ SingleYList.extend(YBag) for YBag in YSet]  
+
+    SingleYList = list(itertools.chain.from_iterable(YSet))
 
     YLocalScaler =   StandardScaler()
      
@@ -33,12 +37,8 @@ def FitTrainDataFroRegressor(theRegressor, trainOrderedConfs, trainDataset):
     
     theRegressor.setScaler(YLocalScaler)
     
-#    print("Ready to Fit Regressor  for Transition {0}, |X|= {1}, |Y| = {2} ".format(theRegressor.getTransitionId(), len(XBitmaps), len(SingleYScaledList)))
-    
     theRegressor.getRegressor().fit(XBitmaps, SingleYScaledList)
-        
-        
-
+                
     
 if __name__ == "__main__":
     if   len(sys.argv) > 4:
@@ -63,14 +63,18 @@ if __name__ == "__main__":
     
     dictRatios =  getSamplingRatiosDict()
     
+    listTransitionToSample = [x for x in dictRatios.keys()]
+    
+    # As we don't yet have sampling ratios for 27.
+    if 27 not in listTransitionToSample:
+        listTransitionToSample.append(27)
+    
     RegressorList = []
-    for transitionId in dictRatios.keys():
-         newRegressor = crateRegressorWrapperFromTuple(transitionId, bestRegressorPerTransition[transitionId])# TransitionRegressorWrappper(transitionId, bestRegressorPerTransition[transitionId][1], None)
+    for transitionId in listTransitionToSample:
+         newRegressor = crateRegressorWrapperFromTuple(transitionId, bestRegressorPerTransition[transitionId])
 
          FitTrainDataFroRegressor(newRegressor, trainOrderedConfs, trainDataset)
-#         print (newRegressor.getScaler().mean_)
-#         print (newRegressor.getTransitionId())
-#         print (newRegressor.getUseSquareX())        
+         
          RegressorList.append(newRegressor)
     
     saveObjectToPickleFile(RegressorOutputFilename, RegressorList)

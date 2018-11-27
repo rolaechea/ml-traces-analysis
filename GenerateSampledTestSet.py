@@ -6,7 +6,9 @@ Created on Thu Nov 15 16:46:02 2018
 @author: rafaelolaechea
 """
 
-from ParseTrace import getTransitionToBagOfTimesForAllRepsForAProduct,  loadObjectFromPickle, saveObjectToPickleFile, getTestSetSamplingRatiosDict
+from pickleFacade import loadObjectFromPickle, saveObjectToPickleFile
+
+from ParseTrace import getTransitionToBagOfTimesForAllRepsForAProduct, getTestSetSamplingRatiosDict
 
 from TransitionDictionaryManipulations import downSampleSingleDictionary
 
