@@ -1,0 +1,10 @@
+tail -n 1 results_460_rep_1.csv | cut -d, -f1,91,92 >> best_method_460_rep_1.csv
+tail -n 1 results_460_rep_2.csv | cut -d, -f1,91,92 >> best_method_460_rep_2.csv
+tail -n 1 results_460_rep_3.csv | cut -d, -f1,91,92 >>  best_method_460_rep_3.csv
+tail -n 1 results_460_rep_4.csv | cut -d, -f1,91,92 >> best_method_460_rep_4.csv
+tail -n 1 results_460_rep_5.csv | cut -d, -f1,91,92 >> best_method_460_rep_5.csv
+tail -n 1 results_460_rep_6.csv | cut -d, -f1,91,92 >> best_method_460_rep_6.csv
+tail -n 1 results_460_rep_7.csv | cut -d, -f1,91,92 >> best_method_460_rep_7.csv
+tail -n 1 results_460_rep_8.csv | cut -d, -f1,91,92 >> best_method_460_rep_8.csv
+tail -n 1 results_460_rep_9.csv | cut -d, -f1,91,92 >> best_method_460_rep_9.csv
+tail -n 1 results_460_rep_10.csv | cut -d, -f1,91,92 >> best_method_460_rep_10.csv
