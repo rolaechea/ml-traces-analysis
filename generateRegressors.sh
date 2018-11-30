@@ -1,8 +1,0 @@
-python GenerateAndSaveRegressors.py sampled_460_rep_3.pkl  train_conf_460_rep_3.pkl best_method_460_rep_3.csv regressors_460_rep_3.pkl
-python GenerateAndSaveRegressors.py sampled_460_rep_4.pkl  train_conf_460_rep_4.pkl best_method_460_rep_4.csv regressors_460_rep_4.pkl
-python GenerateAndSaveRegressors.py sampled_460_rep_5.pkl  train_conf_460_rep_5.pkl best_method_460_rep_5.csv regressors_460_rep_5.pkl
-python GenerateAndSaveRegressors.py sampled_460_rep_6.pkl  train_conf_460_rep_6.pkl best_method_460_rep_6.csv regressors_460_rep_6.pkl
-python GenerateAndSaveRegressors.py sampled_460_rep_7.pkl  train_conf_460_rep_7.pkl best_method_460_rep_7.csv regressors_460_rep_7.pkl
-python GenerateAndSaveRegressors.py sampled_460_rep_8.pkl  train_conf_460_rep_8.pkl best_method_460_rep_8.csv regressors_460_rep_8.pkl
-python GenerateAndSaveRegressors.py sampled_460_rep_9.pkl  train_conf_460_rep_9.pkl best_method_460_rep_9.csv regressors_460_rep_9.pkl
-python GenerateAndSaveRegressors.py sampled_460_rep_10.pkl  train_conf_460_rep_10.pkl best_method_460_rep_10.csv regressors_460_rep_10.pkl
