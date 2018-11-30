@@ -64,12 +64,16 @@ class ExecutedTransition:
        
         if self.transitionName in __dict_TransitionClassNameToId__.keys():
 
-            self.transitionId = __dict_TransitionClassNameToId__[self.transitionName]
-            
-            self.globalTransitionId = self.transitionId # for now.
+            self.transitionId = __dict_TransitionClassNameToId__[self.transitionName]            
+
+            self.globalTransitionId = self.calculateGlobalTransitionId(transitionRosMessage)
     
         else:
             self.transitionId = -1
+    
+    def calculateGlobalTransitionId(self, transitionRosMessage):
+    
+        return self.transitionId
     
     def isDummyTranstion(self):
     

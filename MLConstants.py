@@ -11,3 +11,7 @@ ridgeRegression  = 1
 lassoRegression = 2
 
 alphaValues = [0.001, 0.01, 0.1, 1.0, 10.0] 
+
+
+tupleCountOffset = 0
+tupleTimeOffset = 1
