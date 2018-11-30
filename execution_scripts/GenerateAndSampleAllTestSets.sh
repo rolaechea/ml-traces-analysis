@@ -1,4 +1,4 @@
-python GenerateSampledTestSet.py $1train_conf_460_rep_3.pkl $1test_conf_460_rep_1.pkl  $1test_sampled_460_rep_1.pkl
+python GenerateSampledTestSet.py $1train_conf_460_rep_1.pkl $1test_conf_460_rep_1.pkl  $1test_sampled_460_rep_1.pkl
 python GenerateSampledTestSet.py $1train_conf_460_rep_2.pkl $1test_conf_460_rep_2.pkl  $1test_sampled_460_rep_2.pkl $1test_conf_460_rep_1.pkl $1test_sampled_460_rep_1.pkl 
 python GenerateSampledTestSet.py $1train_conf_460_rep_3.pkl $1test_conf_460_rep_3.pkl  $1test_sampled_460_rep_3.pkl $1test_conf_460_rep_1.pkl $1test_sampled_460_rep_1.pkl $1test_conf_460_rep_2.pkl $1test_sampled_460_rep_2.pkl
 python GenerateSampledTestSet.py $1train_conf_460_rep_4.pkl $1test_conf_460_rep_4.pkl  $1test_sampled_460_rep_4.pkl $1test_conf_460_rep_1.pkl $1test_sampled_460_rep_1.pkl $1test_conf_460_rep_2.pkl $1test_sampled_460_rep_2.pkl
