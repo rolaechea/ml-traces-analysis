@@ -16,10 +16,10 @@ from sklearn.preprocessing import  StandardScaler
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 
 import MLConstants
-
+    
 from pickleFacade import loadObjectFromPickle
 
-from ParseTrace import  getSamplingRatiosDict
+from ParseTrace import  getAllTransitionsIdsList
 
 from ConfigurationUtilities import   mean_absolute_error_and_stdev_eff
 
@@ -128,7 +128,7 @@ if __name__ == "__main__":
               "train configurations, results of CV, test datasetm, test configurations")
         exit(0)
     
-    dictRatios =  getSamplingRatiosDict()
+    transitionIdList = getAllTransitionsIdsList()
 
     bestRegressorPerTransition = getBestMethodPerTransition(CvResultsFilename)
 
@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
         
     print ("Transition Id, YMean_Train, Y_Std_Train, MAE_Train, MAE_Std_Train, YMean_Test, Y_Std_Test, MAE_Test, MAE_Std_Test")
-    for transitionId in dictRatios.keys():
+    for transitionId in transitionIdList:
          
         Regressor, RegressorUseSquares, RegressorIsLasso, YLocalScaler, YMeanTrain, YStdTrain, MAPEYTrain, MAPEStdTrain =  learnRegressorFromDataset(bestRegressorPerTransition[transitionId], transitionId, trainDataset, trainOrderedConfs )    
 

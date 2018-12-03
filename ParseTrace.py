@@ -16,6 +16,8 @@ __BaseTraceFilename__ = "conf-%d-rep-%d-timing.txt"
 
 
 
+
+
 def getTestSetSamplingRatiosDict():
     """
     Assuming test size testSetSize= 2304-460
@@ -27,20 +29,14 @@ def getTestSetSamplingRatiosDict():
                28:0.00050, 33:0.00023, 34:0.01214 }
     
     return dictRet
-
-def getSamplingRatiosDict():
-    """
-    Sampling Ratios for transitions 4 ... 34 (this are wrong for test set / train set)
-    """
-    dictRet = {4: 0.07125, 5:0.00018,  6:0.07234, 7:0.07234, \
-               8:0.07210, 9:0.01096, 10:0.00063, 11:0.00049, 12:0.00025, \
-               13:0.01011, 14:0.00038, 15:0.00042, 18:0.00040, 19:0.00113,\
-               20:0.00145, 21:0.00050, 23:0.00300, 24:0.00260, 25:0.00260,\
-               28:0.00025, 33:0.00018, 34:0.00228 }
     
-    return dictRet
-
+    
                              
+def getAllTransitionsIdsList():
+    """
+    Returns a list of all transitions for which we measure the timing information.
+    """
+    return [x for x in getTestSetSamplingRatiosDict().keys() ]
 
  
 def getFilenameFromConfigurationAndRepetition(configuration, repetition):

@@ -8,7 +8,7 @@ Created on Wed Nov 21 16:03:51 2018
 import sys
 
 from pickleFacade import loadObjectFromPickle, saveObjectToPickleFile
-from ParseTrace import  getSamplingRatiosDict
+from ParseTrace import  getAllTransitionsIdsList
 
 from sklearn.preprocessing import  StandardScaler
 from RegressorsUtils import  getBestMethodPerTransition,  crateRegressorWrapperFromTuple
@@ -60,10 +60,8 @@ if __name__ == "__main__":
     
     trainDataset, trainOrderedConfs  = loadObjectFromPickle(sampleTrainFilename), \
         loadObjectFromPickle(confTrainFilename)
-    
-    dictRatios =  getSamplingRatiosDict()
-    
-    listTransitionToSample = [x for x in dictRatios.keys()]
+        
+    listTransitionToSample = getAllTransitionsIdsList()
     
     # As we don't yet have sampling ratios for 27.
     if 27 not in listTransitionToSample:

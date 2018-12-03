@@ -5,7 +5,7 @@ Created on Thu Nov 15 14:57:01 2018
 
 @author: rafaelolaechea
 """
-from ParseTrace import getTransitionToBagOfTimesForAllRepsForAProduct, getSamplingRatiosDict
+from ParseTrace import getTransitionToBagOfTimesForAllRepsForAProduct, getTestSetSamplingRatiosDict
 
 from TransitionDictionaryManipulations import downSampleSingleDictionary, calculatePerTransitionsCounts
 
@@ -14,6 +14,7 @@ import numpy as np
 import pickle
 
 from sklearn.model_selection import train_test_split
+
 if __name__ == "__main__":
     """
     Go through 100 files and calculate Stats of transitions
@@ -21,7 +22,7 @@ if __name__ == "__main__":
     conf_listing = train_test_split(range(0,2304), train_size=20, test_size=2304-100)[0]
 
     Multiplier = 2.0
-    ratioDict = getSamplingRatiosDict()
+    ratioDict = getTestSetSamplingRatiosDict()
     
     
     DictionaryArray = []
