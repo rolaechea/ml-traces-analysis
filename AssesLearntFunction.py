@@ -3,6 +3,11 @@
 """
 Created on Thu Nov 15 16:37:41 2018
 
+
+Assees the learnt functions for each transition.
+ We asses the accuracy of  a regressor learnt on the traininig set, with data from the test set.
+
+
 @author: rafaelolaechea
 """
 
@@ -16,7 +21,8 @@ from sklearn.preprocessing import  StandardScaler
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 
 import MLConstants
-    
+
+from MLConstants import alphaValues
 from pickleFacade import loadObjectFromPickle
 
 from ParseTrace import  getAllTransitionsIdsList
@@ -27,7 +33,7 @@ from RegressorsUtils import getBestMethodPerTransition, getXBitmapsForRegression
 
 from TransitionDictionaryManipulations import  extractLinearArrayTimeTakenForSingleTransition
 
-alphaValues = [0.001, 0.01, 0.1, 1.0, 10.0]
+
 
 
 

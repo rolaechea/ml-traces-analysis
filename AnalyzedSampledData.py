@@ -14,7 +14,7 @@ from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error
 
-
+from MLConstants import alphaValues
 from ResponsesManipulations import getScaledYForProductSet, getFlattenedXAndDependents, \
 getFlattenedOnlyYForProductSet
 
@@ -25,7 +25,6 @@ from ConfigurationUtilities  import mean_absolute_error_eff
 # Error 27 incorrectly excluded
 excludedTransitions = (16, 17, 22,26, 29, 30,31, 32)
 
-alphaValuesList =  [0.001, 0.01, 0.1, 1.0, 10.0] 
 
 if __name__ == "__main__":
     sampleSingleTransition = False
@@ -73,10 +72,10 @@ if __name__ == "__main__":
     
     if outputHeader:
         print("Transition Id, Linear MAPE Average Train , Linear MAPE Average Validation,RMS_T,RMS_V, Linear Squares MAPE Average Train , Linear Squares MAPE Average Validation,RMS_T, RMS_V, Average Y, {0}, {1}, {2}, {3}, {4}".format(\
-          ','.join(["Ridge_Train_"+str(alpha)+", Ridge_Validation__"+str(alpha)+",RMS_T,RMS_V" for alpha in alphaValuesList]),
-          ','.join(["Ridge_Square_Train_"+str(alpha)+", Ridge_Square_Validation__"+str(alpha)+",RMS_T,RMS_V" for alpha in alphaValuesList]), \
-          ','.join(["Lasso_Train_"+str(alpha)+", Lasso_Validation_"+str(alpha)+",RMS_T,RMS_V"  for alpha in alphaValuesList]),\
-          ','.join(["Lasso_Square_Train_"+str(alpha)+", Lasso_Square_Validation__"+str(alpha)+",RMS_T,RMS_V"  for alpha in alphaValuesList]), \
+          ','.join(["Ridge_Train_"+str(alpha)+", Ridge_Validation__"+str(alpha)+",RMS_T,RMS_V" for alpha in alphaValues]),
+          ','.join(["Ridge_Square_Train_"+str(alpha)+", Ridge_Square_Validation__"+str(alpha)+",RMS_T,RMS_V" for alpha in alphaValues]), \
+          ','.join(["Lasso_Train_"+str(alpha)+", Lasso_Validation_"+str(alpha)+",RMS_T,RMS_V"  for alpha in alphaValues]),\
+          ','.join(["Lasso_Square_Train_"+str(alpha)+", Lasso_Square_Validation__"+str(alpha)+",RMS_T,RMS_V"  for alpha in alphaValues]), \
           "Best Method, Supplemental Best Method Index"))
     
     if sampleSingleTransition == True:
@@ -95,11 +94,11 @@ if __name__ == "__main__":
         RMSTrainList =[[], []]
         RMSValidationList =[[], []]
 
-        alphasMapeTrain = [[[],[],[],[]] for x in alphaValuesList]        
-        alphasMapeValidation = [[[],[],[],[]]  for x in alphaValuesList]
+        alphasMapeTrain = [[[],[],[],[]] for x in alphaValues]        
+        alphasMapeValidation = [[[],[],[],[]]  for x in alphaValues]
 
-        alphasRMSTrain = [[[],[],[],[]] for x in alphaValuesList]
-        alphasRMSValidation = [[[],[],[],[]]  for x in alphaValuesList]
+        alphasRMSTrain = [[[],[],[],[]] for x in alphaValues]
+        alphasRMSValidation = [[[],[],[],[]]  for x in alphaValues]
 
         for train_index, test_index in kf.split(trainingSetConfigurations):
             YTrainScaledValues, YScaler, TrainHasYVals = getScaledYForProductSet(train_index, YSet)
@@ -155,7 +154,7 @@ if __name__ == "__main__":
                 RMSValidationList[index].append(RMSValidation)
 
 
-            for alphaValue, alphaIndex in zip(alphaValuesList, range(0, len(alphaValuesList))):
+            for alphaValue, alphaIndex in zip(alphaValues, range(0, len(alphaValues))):
                 
                 allRidgeEstimators = [Ridge(alpha=alphaValue), Ridge(alpha=alphaValue), Lasso(alpha=alphaValue), Lasso(alpha=alphaValue)]
                 
