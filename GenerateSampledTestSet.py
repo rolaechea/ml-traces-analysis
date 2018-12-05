@@ -33,12 +33,8 @@ if __name__ == "__main__":
         
         confTrainFilename = sys.argv[1]        
         
-        pkl_file = open(confTrainFilename, 'rb')
-    
-        confsTrain = pickle.load(pkl_file)        
-           
-        pkl_file.close()                  
-       
+        confsTrain = loadObjectFromPickle(confTrainFilename)
+
         assesmentConfsFilename = sys.argv[2]
         
         assesmentSampledFilename = sys.argv[3]

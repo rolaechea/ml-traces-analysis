@@ -17,6 +17,7 @@ from sklearn.metrics import mean_squared_error
 from MLConstants import alphaValues
 from ResponsesManipulations import getScaledYForProductSet, getFlattenedXAndDependents, \
 getFlattenedOnlyYForProductSet
+from pickleFacade import loadObjectFromPickle
 
 from TransitionDictionaryManipulations import extractLinearArrayTimeTakenForSingleTransition, calculatePerTransitionsCounts
 from ConfigurationUtilities  import mean_absolute_error_eff
@@ -47,28 +48,16 @@ if __name__ == "__main__":
         exit(0)        
 
 
-    pkl_ConfFile = open(confFilename, 'rb')
-
-    trainingSetConfigurations = pickle.load(pkl_ConfFile)        
-
-    pkl_ConfFile.close() 
+    trainingSetConfigurations =loadObjectFromPickle(confFilename) 
     
-    pkl_file = open(inputFilename, 'rb')
+    transitionArrayOfDictionary = loadObjectFromPickle(inputFilename)
 
-    transitionArrayOfDictionary = pickle.load(pkl_file)        
-
-    pkl_file.close()    
-    
     assert(len(trainingSetConfigurations)==len(transitionArrayOfDictionary))
-    
-    
-
     
     KValue = 5
     kf = KFold(n_splits=KValue, shuffle=True)
     
-    allCounts = calculatePerTransitionsCounts(transitionArrayOfDictionary)
-    
+    allCounts = calculatePerTransitionsCounts(transitionArrayOfDictionary)    
     
     if outputHeader:
         print("Transition Id, Linear MAPE Average Train , Linear MAPE Average Validation,RMS_T,RMS_V, Linear Squares MAPE Average Train , Linear Squares MAPE Average Validation,RMS_T, RMS_V, Average Y, {0}, {1}, {2}, {3}, {4}".format(\
