@@ -18,9 +18,9 @@ if __name__ == "__main__":
     """
     if len(sys.argv) > 2:
         
-        InputFolder = sys.argv[0]
+        InputFolder = sys.argv[1]
         
-        OutputFilename = sys.argv[1]        
+        OutputFilename = sys.argv[2]        
         
     else:
         print ("Requires two arguments: source folder with traces, and filename to store pkl of traces.") 
