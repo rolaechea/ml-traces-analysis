@@ -6,7 +6,7 @@ Created on Thu Dec  6 11:42:20 2018
 @author: rafaelolaechea
 """
 
-class ExecutionTrace:
+class ExecutionTrace(object):
     def __init__(self):
         """
         Constructor to represent an execution trace

@@ -11,7 +11,7 @@ from GenericTraces import ExecutionTrace, TransitionType
 __dict_TransitionClassNameToId__ = {"LocalizerCompletion" : 1, "WaypointsCollectionCompletion" : 2, "MapServerCompletion": 3, "DynamicObjectTrackingCompletion": 4, \
                                     "OccupancyCompletion":5, "BehaviorPlannerCompletion":6, "LocalPlannerCompletion":7}
 
-class LearnFromTraces:
+class LearnFromTraces(object):
     
     def __init__(self, learnerType):
         """
@@ -62,7 +62,7 @@ class TransitionTypeAutonomoose(TransitionType):
         return False
         
                 
-class ExecutedTransitionAutonomoose:
+class ExecutedTransitionAutonomoose(object):
     
     def __init__(self, transitionRosMessage):
         
