@@ -45,7 +45,6 @@ def parseRuntimeParemeters(inputParameters):
     """
     verboseDebug = False
     TraceSourceFolder = ""
-    print (len(inputParameters))
     
     if  len(inputParameters) > MIN_NUM_ARGUMENTS:
          # First parameter is size of training set, 2nd is name of configurationFile
@@ -184,34 +183,60 @@ def extractAndSampleBySectionsFromTraces(TrainingSetConfigurations, TrainingConf
 
 
 def extractTracesFromSinglePKL(TrainingSetConfigurations, TrainingConfSize, TrainingConfFilename, OutputFilenamem, verboseDebug):
+    """    
+    Receive Encoding of traces for each  configuration    
+    """
     
-    allTracesAutonomoose = loadObjectFromPickle(getSingleFilenameWithAllTraces)
+    allTracesAutonomoose = loadObjectFromPickle(getSingleFilenameWithAllTraces())
     
-    print (len(allTracesAutonomoose))
+    GlobalTmpArray = []
+    
+    for configurationId in TrainingSetConfigurations:        
+        print ("Processing {0}".format(configurationId))
+#        print ("Configuration {0}, Number of Traces {1} ".format(configurationId, len(allTracesAutonomoose[configurationId])))
+        
+        lstAllTracesForConf  = allTracesAutonomoose[configurationId]
+        
+        dctTransitionsToExecutions = {}
+        
+        for anAutonomoseExecutionTrace in lstAllTracesForConf:
+            #Each trace is AutonomooseTraces.ExecutionTraceAutonomoose
+            anAutonomoseExecutionTrace.addExecutedTransitionsToDictionary(dctTransitionsToExecutions)
+        
+#            print ("After processing an  execution of type {0}, we have a dicitonary with {1} elements".format(type(anAutonomoseExecutionTrace), \                   
+#                   sum([len(dctTransitionsToExecutions[x]) for x in dctTransitionsToExecutions.keys()])))
+        
+        print (dctTransitionsToExecutions.keys())
+        
+        GlobalTmpArray.append(dctTransitionsToExecutions)
+        
+    saveObjectToPickleFile(OutputFilename, GlobalTmpArray)
 
 if __name__ == "__main__":
     
+    
+    
     SubjectSystem, TraceSourceFolder, TrainingConfSize,  TrainingConfFilename, OutputFilename, verboseDebug = parseRuntimeParemeters(sys.argv)
     
-    print (TraceSourceFolder)
-    
     setBaseTracesSourceFolder(TraceSourceFolder)
-    
-    print (getFilenameFromConfigurationAndRepetition(5, 3))
-    
-    exit()
-    
+        
     if SubjectSystem == MLConstants.x264Name:
         TestsetConfigurationSize = 2304-TrainingConfSize
+        SubjectSystemId = MLConstants.x264Id
     elif SubjectSystem == MLConstants.autonomooseName:
+        SubjectSystemId = MLConstants.autonomooseId
         TestsetConfigurationSize = 32-TrainingConfSize
             
-    TrainingSetConfigurations = train_test_split(getAllPossibleIds(), getAllPossibleIds(), train_size=TrainingConfSize, test_size=TestsetConfigurationSize)[0]
+    TrainingSetConfigurations = train_test_split(getAllPossibleIds(MLConstants.autonomooseId), getAllPossibleIds(MLConstants.autonomooseId),\
+                                                 train_size=TrainingConfSize, test_size=TestsetConfigurationSize)[0]
        
     saveObjectToPickleFile(TrainingConfFilename, TrainingSetConfigurations)
 
     if SubjectSystem == MLConstants.x264Name:
+        
         extractAndSampleBySectionsFromTraces(TrainingSetConfigurations, TrainingConfSize,TrainingConfFilename, OutputFilename, verboseDebug)
+        
     elif SubjectSystem == MLConstants.autonomooseName:
+        
         extractTracesFromSinglePKL(TrainingSetConfigurations, TrainingConfSize,TrainingConfFilename, OutputFilename, verboseDebug)
         

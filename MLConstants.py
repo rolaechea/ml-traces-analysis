@@ -19,4 +19,8 @@ tupleTimeOffset = 1
 autonomooseName = "autonomoose"
 x264Name = "x264"
 
+
 lstSubjectSystems = [autonomooseName, x264Name]
+
+autonomooseId = 0
+x264Id = 1

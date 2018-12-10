@@ -6,14 +6,21 @@ Created on Tue Nov  6 13:05:54 2018
 @author: rafaelolaechea
 """
 import numpy as np
+import MLConstants
 
-
-def getAllPossibleIds():
+def getAllPossibleIds(systemId = MLConstants.x264Id):
     """
     Get a set of configuration ids from which the training/test set will be selected.
     """
-    return range(0, 2304)       
-
+    if systemId == MLConstants.x264Id:
+        return range(0, 2304)       
+    elif systemId == MLConstants.autonomooseId:
+        return range(0, 32)
+    else:
+        print ("Called getAllPossibleIds with unknownk subject system id.")
+        exit()
+        
+        
 def mean_absolute_error_and_stdev_eff(y_true, y_pred):
     """
     Requires two arrays of equal dimensions but its much faster than mean_absolute_error.

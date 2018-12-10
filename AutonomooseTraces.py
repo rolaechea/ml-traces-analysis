@@ -82,7 +82,17 @@ class ExecutionTraceAutonomoose(ExecutionTrace):
                 
             elif 'ST_OFF'  in dir(aMsg.message):             
                 self.setStartSystem(len(self.lstExecutedTransitions))
-
+                
+    def addExecutedTransitionsToDictionary(self, dctExecutedTransitions):
+        """
+        Adss into a dictionary a list of executed transitions.
+        """
+        for executedTransition in self.lstExecutedTransitions:
+            if executedTransition.getTransitionId() in dctExecutedTransitions.keys():
+                dctExecutedTransitions[executedTransition.getTransitionId()].append(executedTransition)
+            else:
+                dctExecutedTransitions[executedTransition.getTransitionId()] = [executedTransition]
+        
 class TransitionTypeAutonomoose(TransitionType):
     allTransitionTypes = []
     
