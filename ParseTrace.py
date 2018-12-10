@@ -6,7 +6,7 @@ Created on Tue Nov  6 10:51:56 2018
 @author: rafaelolaechea
 """
 
-
+import sys
 
 __TraceDirectory__ = "../FullTraces/akiyo/"
 __ComputedTraceFilename__ = "traceName.txt"
@@ -38,7 +38,19 @@ def getAllTransitionsIdsList():
     """
     return [x for x in getTestSetSamplingRatiosDict().keys() ]
 
- 
+
+def getSingleFilenameWithAllTraces():
+    return __TraceDirectory__ + "allTraces.pkl"
+
+
+def setBaseTracesSourceFolder(newSourceFolder):
+
+    sys.modules[__name__].__TraceDirectory__ = newSourceFolder
+    
+def getBaseTracesSourceFolder():
+
+    return __TraceDirectory__
+    
 def getFilenameFromConfigurationAndRepetition(configuration, repetition):
     """
     Returns a resolved filename based on given configuration and repetition

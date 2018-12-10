@@ -15,3 +15,8 @@ alphaValues = [0.001, 0.01, 0.1, 1.0, 10.0]
 
 tupleCountOffset = 0
 tupleTimeOffset = 1
+
+autonomooseName = "autonomoose"
+x264Name = "x264"
+
+lstSubjectSystems = [autonomooseName, x264Name]

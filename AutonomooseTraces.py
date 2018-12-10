@@ -8,9 +8,31 @@ Created on Tue Nov 27 10:56:25 2018
 
 from GenericTraces import ExecutionTrace, TransitionType
 
+enumLocalizerTransition = 1
+enumWaypointsCollectionTransition = 2
+enumMapServerTransition = 3
+
 __dict_TransitionClassNameToId__ = {"LocalizerCompletion" : 1, "WaypointsCollectionCompletion" : 2, "MapServerCompletion": 3, "DynamicObjectTrackingCompletion": 4, \
                                     "OccupancyCompletion":5, "BehaviorPlannerCompletion":6, "LocalPlannerCompletion":7}
 
+ListNoSubTransitions = frozenset([enumLocalizerTransition, enumWaypointsCollectionTransition])
+
+
+def decodeMessageClassName(classObject):
+    """
+    Returns the name of an anm_msg object, which is  normally  a transition.
+    """
+    prefixAnmMsg = "_anm_msgs__"
+    clsNameEndMarker = "\'"
+    
+    startIndexTransitionName = str(classObject).find(prefixAnmMsg)+ len(prefixAnmMsg)
+    
+    endIndexTransitionName = str(classObject)[startIndexTransitionName:].find(clsNameEndMarker) + startIndexTransitionName
+    
+    strTransitionName = str(classObject)[startIndexTransitionName:endIndexTransitionName]
+    
+    return strTransitionName
+    
 class LearnFromTraces(object):
     
     def __init__(self, learnerType):
@@ -34,17 +56,36 @@ class ExecutionTraceAutonomoose(ExecutionTrace):
         self.setSize(len(self.lstExecutedTransitions))
         
 
+    def setStartSystem(self, indexId):
+        """
+        Sets the start system index, such that All transitions with offset < startSystemIndex were sent before the system message.
+        Transition with index = startSystemIndex was sent right after system message
+        
+        Note: startSystemIndex should always be equal to zero (i.e. first message)        
+        """
+        
+        self.startSystemIndex = indexId
+        
+        #print(self.startSystemIndex)
+
     def parseExecutedTransitions(self, traceBag):
         
         self.lstExecutedTransitions = []
         
+
         for aMsg in traceBag.read_messages():
             if 'loop_id' in dir(aMsg.message):
                 newExecutedTransition = ExecutedTransitionAutonomoose(aMsg.message)
-                self.lstExecutedTransitions.append(newExecutedTransition)
                 
+                self.lstExecutedTransitions.append(newExecutedTransition)
+                #print(len(self.lstExecutedTransitions))
+                
+            elif 'ST_OFF'  in dir(aMsg.message):             
+                self.setStartSystem(len(self.lstExecutedTransitions))
 
 class TransitionTypeAutonomoose(TransitionType):
+    allTransitionTypes = []
+    
     def __init__(self, transitionId, transitionName):
 
         super(TransitionTypeAutonomoose, self).__int__(self, transitionId)
@@ -66,26 +107,43 @@ class ExecutedTransitionAutonomoose(object):
     
     def __init__(self, transitionRosMessage):
         
-        self.transitionName = self.decodeMessageClassName(transitionRosMessage.__class__)
+        tmpTransitionName = decodeMessageClassName(transitionRosMessage.__class__)
 
+        self.isAutonomooseStart = False
+        
         self.loopId =  transitionRosMessage.loop_id
         
         self.timeTaken = transitionRosMessage.transition_time_taken
        
-        if self.transitionName in __dict_TransitionClassNameToId__.keys():
+        if tmpTransitionName in __dict_TransitionClassNameToId__.keys():
 
-            self.transitionId = __dict_TransitionClassNameToId__[self.transitionName]            
+            self.coarseTransitionId = __dict_TransitionClassNameToId__[tmpTransitionName]            
 
-            self.globalTransitionId = self.calculateGlobalTransitionId(transitionRosMessage)
+            self.fineTransitionId = self.parseFineTransitionId(transitionRosMessage)
     
+            self.transitionId = self.calculateTransitionId()
+            
         else:
-            self.transitionId = -1
+            raise Exception("Unknown Transition encountered")
 
         self.isDummy = False
         
-    def calculateGlobalTransitionId(self, transitionRosMessage):
+    def calculateTransitionId(self):
+        """
+        Calculate Unique Id based on Transition Ids (Coarse/Fine)
+        """
+        return self.coarseTransitionId
     
-        return self.transitionId
+    def parseFineTransitionId(self, transitionRosMessage):
+        """
+        Code to parse the fine grained transition id from a ROS message.
+        """
+        if self.coarseTransitionId in ListNoSubTransitions:            
+            tmpRetId = -1
+        else:
+            tmpRetId = 0
+            
+        return tmpRetId
     
     def setIsDummyTransition(self, isDummy):
         
@@ -95,21 +153,6 @@ class ExecutedTransitionAutonomoose(object):
     
         return self.isDummy
     
-    def decodeMessageClassName(self, classObject):
-        """
-        Returns the name of class containing transition 
-        """
-        prefixAnmMsg = "_anm_msgs__"
-        clsNameEndMarker = "\'"
-        
-        startIndexTransitionName = str(classObject).find(prefixAnmMsg)+ len(prefixAnmMsg)
-        
-        endIndexTransitionName = str(classObject)[startIndexTransitionName:].find(clsNameEndMarker) + startIndexTransitionName
-        
-        strTransitionName = str(classObject)[startIndexTransitionName:endIndexTransitionName]
-        
-        return strTransitionName
-    
     def getTimeTaken(self):
         
         return self.timeTaken
@@ -117,15 +160,19 @@ class ExecutedTransitionAutonomoose(object):
     def getLoopId(self):
         
         return self.loopId
-    
-    
+        
     def getTransitionId(self):
         
-        return  self.transitionId  #self.transitionType.getTransitionId()
+        return  self.transitionId
     
-    def getTransitionName(self):
+    def getCoarseTransitionId(self):
+        
+        return self.coarseTransitionId
     
-        return self.transitionName #self.self.transitionType.getTransitionName()
+    def getFineTransitionId(self):
+
+        return self.fineTransitionId
+
     
 
 
