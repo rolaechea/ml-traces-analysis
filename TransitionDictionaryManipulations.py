@@ -18,7 +18,7 @@ def extractLinearArrayTimeTakenForSingleTransition(ArrayOfDictTransitionIdsToVal
           Param 2    A list of configurations such that len(param_1) = len (param_2)
      Output
          A list of list of time taken (y_1-1 ... y_1n-), (y_2-1, y_2-N) ... corresponding to  time takes from P1(conf_1), P2(conf_2) where conf_i is the ith configuration given in Param 2.
-      Assumption
+      Usage Assumptions
           Users knows that configuration that each element of ArrayOfDictTransitionIdsToValueSet corresponds to. 
           Returned List contains list of lists of times, in same conf. order as ArrayOfDictTransitionIdsToValueSet
     """  

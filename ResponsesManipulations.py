@@ -39,7 +39,7 @@ def getScaledYForProductSet(productIndices, YValsListOfLists):
     Input:
         List of X indices represernting set of products
         List of ordered Y bags           
-    returns a list of lists of sclaed Y vectors, a scaler for Y (if there is a Y for set of products given), and boolean whethere there is a Y in set of products given
+    returns a list of lists of sclaed Y vectors, a scaler for Y (if there is a Y for set of products given), and boolean whether there is a Y in set of products given
     """
     YLocalArrayOfBags = [YValsListOfLists[xIndex] for xIndex in productIndices]
     

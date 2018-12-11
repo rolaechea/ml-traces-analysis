@@ -221,10 +221,11 @@ if __name__ == "__main__":
     setBaseTracesSourceFolder(TraceSourceFolder)
         
     if SubjectSystem == MLConstants.x264Name:
+        
         TestsetConfigurationSize = 2304-TrainingConfSize
-        SubjectSystemId = MLConstants.x264Id
+        
     elif SubjectSystem == MLConstants.autonomooseName:
-        SubjectSystemId = MLConstants.autonomooseId
+        
         TestsetConfigurationSize = 32-TrainingConfSize
             
     TrainingSetConfigurations = train_test_split(getAllPossibleIds(MLConstants.autonomooseId), getAllPossibleIds(MLConstants.autonomooseId),\
