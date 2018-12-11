@@ -7,7 +7,6 @@ Created on Tue Nov 13 16:14:54 2018
 """
 import sys
 
-import pickle
 import numpy as np
 
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
@@ -28,8 +27,11 @@ excludedTransitions = (16, 17, 22,26, 29, 30,31, 32)
 
 
 if __name__ == "__main__":
+    
     sampleSingleTransition = False
+    
     singleTransitionToSample = 0
+    
     outputHeader = True
     
     if   len(sys.argv) > 2:
