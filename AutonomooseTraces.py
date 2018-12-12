@@ -18,6 +18,32 @@ __dict_TransitionClassNameToId__ = {"LocalizerCompletion" : 1, "WaypointsCollect
 ListNoSubTransitions = frozenset([enumLocalizerTransition, enumWaypointsCollectionTransition])
 
 
+
+def getSetOfExecutionTimesAutonomoose(transitionData, transitionId):
+    """
+    Inputs: transitionData -- Array of dicts transitions ids to executed Transition Objects of length N.
+    Ouputs: array of lists of executed transition times -- of lenth N.
+    
+    TODO  -- Filter out 'dummy transitions' --- could be done when reading input.
+    """
+    print("Shall search for all transitions execution times in transitionData for transitionId")
+    print(len(transitionData))
+    print(transitionData[0].keys())
+    retArrayExecutionTimes = []
+    for dctIdToExecutedTransitions in transitionData:
+        tmpLocalDictTimes = []
+        if (transitionId) in  dctIdToExecutedTransitions.keys():
+            tmpLocalDictTimes = [x.getTimeTaken() for x in dctIdToExecutedTransitions[transitionId]]
+            retArrayExecutionTimes.append(tmpLocalDictTimes)
+        else:
+            retArrayExecutionTimes.append(tmpLocalDictTimes)
+
+    return retArrayExecutionTimes
+
+            
+def getListOfAvailableTransitionsAutonomoose(transitionData):
+    return [3]
+
 def decodeMessageClassName(classObject):
     """
     Returns the name of an anm_msg object, which is  normally  a transition.
@@ -33,6 +59,7 @@ def decodeMessageClassName(classObject):
     
     return strTransitionName
     
+
 class LearnFromTraces(object):
     
     def __init__(self, learnerType):

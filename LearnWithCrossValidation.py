@@ -22,6 +22,7 @@ from pickleFacade import loadObjectFromPickle
 
 from TransitionDictionaryManipulations import extractLinearArrayTimeTakenForSingleTransition, calculatePerTransitionsCounts
 from ConfigurationUtilities  import mean_absolute_error_eff
+from AutonomooseTraces import getListOfAvailableTransitionsAutonomoose, getSetOfExecutionTimesAutonomoose
 
 
 # Error 27 incorrectly excluded
@@ -31,7 +32,51 @@ excludedTransitions = (16, 17, 22,26, 29, 30,31, 32)
 MIN_NUM_ARGUMENTS = 3
 K_VALUE = 5
 
+class XAndYForASingleCVRun(object):
+    def __init__(self, train_index, test_index,  trainingSetConfigurations, YSet):
+        self.train_index = train_index
+        self.test_index = test_index
+        self.trainingSetConfigurations = trainingSetConfigurations
+        self.YSet = YSet
+        
+    def calculateTrainAndTestXAndY(self):
+        """
+        Sets the following variables that are used for cross validating / model selection.
 
+                YTrainOriginal                
+                YTrainScaledValues
+
+                YScaler
+                
+                XTrainRepeated
+                XTrainSquareRepeated
+                
+                XTest
+                YTest
+                
+        Returns false if we must skip current CV iteratino either to no Y values in train or test set.
+        """
+        self.YTrainScaledValues, self.YScaler, self.TrainHasYVals = getScaledYForProductSet(self.train_index, self.YSet)
+        
+        if self.TrainHasYVals == False:
+            return False
+
+        self.YTrainOriginal = self.YScaler.inverse_transform(self.YTrainScaledValues) # Extract corresponding Y original original through back transformation from scaled Y
+        
+        self.XTrainRepeated, self.XTrainSquareRepeated = getFlattenedXAndDependents(self.train_index, self.trainingSetConfigurations, self.YSet)
+
+#        assert(len(YTrainScaledValues)==len(XTrainRepeated))
+#        assert(len(YTrainScaledValues)==len(XTrainSquareRepeated))
+
+        self.XTest, self.XTestSquares = getFlattenedXAndDependents(self.test_index, self.trainingSetConfigurations, self.YSet)
+        
+        if len(self.XTest) == 0:
+            return False # No Y Values in test indices so must skip.
+        
+        self.YTest = getFlattenedOnlyYForProductSet(self.test_index, self.YSet)
+        
+        return True
+    
 class AccumlatedStatisticsAndParamConstants(object):
     """
     Set of constants arrays (e.g. alpha values) to be used in Cross Validation.
@@ -70,7 +115,7 @@ def parseRuntimeParemeters(inputParameters):
              
             print ("Subject systems must be one of {0}".format(", ".join(MLConstants.lstSubjectSystems)))
              
-             exit()
+            exit()
         
         confFilename = sys.argv[2]
         
@@ -125,40 +170,26 @@ def learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigur
         wrapperParamsStats = AccumlatedStatisticsAndParamConstants()
 
         for train_index, test_index in kf.split(trainingSetConfigurations):
+                
+            CVInputsAndOutputsContainer = XAndYForASingleCVRun(train_index, test_index, trainingSetConfigurations, YSet)
             
-            YTrainScaledValues, YScaler, TrainHasYVals = getScaledYForProductSet(train_index, YSet)
-
-            if TrainHasYVals == False:
-                continue            
-
-            YTrainOriginal = YScaler.inverse_transform(YTrainScaledValues) # Extract corresponding Y original original through back transformation from scaled Y
-            
-            XTrainRepeated, XTrainSquareRepeated = getFlattenedXAndDependents(train_index, trainingSetConfigurations, YSet)
-
-            assert(len(YTrainScaledValues)==len(XTrainRepeated))
-            assert(len(YTrainScaledValues)==len(XTrainSquareRepeated))
-
-            XTest, XTestSquares = getFlattenedXAndDependents(test_index, trainingSetConfigurations, YSet)
-            
-            if len(XTest) == 0:
-                continue # No Y Values in test indices so must skip.
-            
-            YTest = getFlattenedOnlyYForProductSet(test_index, YSet)
-            
+            CVInputsAndOutputsContainer.calculateTrainAndTestXAndY()
 
             allLinearEsimators =  [LinearRegression(), LinearRegression()]
-            allLinearXTrain = [XTrainRepeated, XTrainSquareRepeated]
-            allLinearXTest = [XTest, XTestSquares]
+            
+            allLinearXTrain = [CVInputsAndOutputsContainer.XTrainRepeated, CVInputsAndOutputsContainer.XTrainSquareRepeated]
+            
+            allLinearXTest = [CVInputsAndOutputsContainer.XTest, CVInputsAndOutputsContainer.XTestSquares]
             
             for index in range(0, len(allLinearEsimators)):
 
-                allLinearEsimators[index].fit(allLinearXTrain[index], YTrainScaledValues)
+                allLinearEsimators[index].fit(allLinearXTrain[index], CVInputsAndOutputsContainer.YTrainScaledValues)
                 
-                YTrainPredicted = YScaler.inverse_transform(allLinearEsimators[index].predict(allLinearXTrain[index]))
+                YTrainPredicted = CVInputsAndOutputsContainer.YScaler.inverse_transform(allLinearEsimators[index].predict(allLinearXTrain[index]))
 
                 
-                MAPETrain = mean_absolute_error_eff(YTrainOriginal, YTrainPredicted)
-                RMSTrain =  mean_squared_error(YTrainOriginal, YTrainPredicted)
+                MAPETrain = mean_absolute_error_eff(CVInputsAndOutputsContainer.YTrainOriginal, YTrainPredicted)
+                RMSTrain =  mean_squared_error(CVInputsAndOutputsContainer.YTrainOriginal, YTrainPredicted)
 
 
                 wrapperParamsStats.MAPETrainList[index].append(MAPETrain)
@@ -166,13 +197,13 @@ def learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigur
 
                 #
                 # Based on test set                
-                YTestPredicted = YScaler.inverse_transform(allLinearEsimators[index].predict(allLinearXTest[index]))  
+                YTestPredicted = CVInputsAndOutputsContainer.YScaler.inverse_transform(allLinearEsimators[index].predict(allLinearXTest[index]))  
 
                 # Transform Ytest to np array for performance reasons.
-                YTest = np.array(YTest)
+                CVInputsAndOutputsContainer.YTest = np.array(CVInputsAndOutputsContainer.YTest)
                                 
-                MAPEValidation = mean_absolute_error_eff(YTest, YTestPredicted)
-                RMSValidation  =  mean_squared_error(YTest, YTestPredicted)
+                MAPEValidation = mean_absolute_error_eff(CVInputsAndOutputsContainer.YTest, YTestPredicted)
+                RMSValidation  =  mean_squared_error(CVInputsAndOutputsContainer.YTest, YTestPredicted)
 
                 wrapperParamsStats.MAPEValidationList[index].append(MAPEValidation)
                 wrapperParamsStats.RMSValidationList[index].append(RMSValidation)
@@ -184,31 +215,30 @@ def learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigur
                 
                 for index in range(0, len(allRidgeEstimators)):
                         
-                    allRidgeEstimators[index].fit(allLinearXTrain[index%2], YTrainScaledValues)
+                    allRidgeEstimators[index].fit(allLinearXTrain[index%2], CVInputsAndOutputsContainer.YTrainScaledValues)
                     
-                    YTrainRidgePredicted = YScaler.inverse_transform(allRidgeEstimators[index].predict(allLinearXTrain[index%2]))
+                    YTrainRidgePredicted = CVInputsAndOutputsContainer.YScaler.inverse_transform(allRidgeEstimators[index].predict(allLinearXTrain[index%2]))
 
                     if index >= 2:
                         YTrainRidgePredicted = np.array([[y] for y in YTrainRidgePredicted])
                     
-                    MAPETrain = mean_absolute_error_eff(YTrainOriginal, YTrainRidgePredicted)
-                    RMSTrain  = mean_squared_error(YTrainOriginal, YTrainRidgePredicted)
+                    MAPETrain = mean_absolute_error_eff(CVInputsAndOutputsContainer.YTrainOriginal, YTrainRidgePredicted)
+                    RMSTrain  = mean_squared_error(CVInputsAndOutputsContainer.YTrainOriginal, YTrainRidgePredicted)
 
                     wrapperParamsStats.alphasMapeTrain[alphaIndex][index].append(MAPETrain)
                     wrapperParamsStats.alphasRMSTrain[alphaIndex][index].append(RMSTrain)
 
-                    YTestRidgePredicted =  YScaler.inverse_transform(allRidgeEstimators[index].predict(allLinearXTest[index%2]))
+                    YTestRidgePredicted =  CVInputsAndOutputsContainer.YScaler.inverse_transform(allRidgeEstimators[index].predict(allLinearXTest[index%2]))
 
                     if index >= 2:
                         YTestRidgePredicted = np.array([[y] for y in YTestRidgePredicted])
                                        
-                    MAPEValidation = mean_absolute_error_eff(YTest, YTestRidgePredicted)
-                    RMSValidation = mean_squared_error(YTest, YTestRidgePredicted)
+                    MAPEValidation = mean_absolute_error_eff(CVInputsAndOutputsContainer.YTest, YTestRidgePredicted)
+                    RMSValidation = mean_squared_error(CVInputsAndOutputsContainer.YTest, YTestRidgePredicted)
 
                     wrapperParamsStats.alphasMapeValidation[alphaIndex][index].append(MAPEValidation)
                     wrapperParamsStats.alphasRMSValidation[alphaIndex][index].append(RMSValidation)
 
-        return
     
         if len(wrapperParamsStats.MAPETrainList[0]) > 0  and len(wrapperParamsStats.MAPEValidationList[0]) > 0:                 
             FullSingleYList = []; [ FullSingleYList.extend(aYBag) for aYBag in YSet]; 
@@ -285,7 +315,10 @@ def learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigur
                    BestMethodName, SupplementalBestMethodIndex))
 
 def learnFromTraininingSetX264(trainingSetConfigurations, transitionArrayOfDictionary):
-
+    """
+    Performs cross validation on data for X264.
+    """
+    
     kf = KFold(n_splits=K_VALUE, shuffle=True)
     
     allCounts = calculatePerTransitionsCounts(transitionArrayOfDictionary)
@@ -294,26 +327,39 @@ def learnFromTraininingSetX264(trainingSetConfigurations, transitionArrayOfDicti
     
     for transitionId in listTransitionsToSample:
         YSet = extractLinearArrayTimeTakenForSingleTransition(transitionArrayOfDictionary, transitionId)
+#        print (YSet[0][0:10])
+#        print (len(YSet))        
+#        exit()
         
         learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations,  kf, YSet)
         
-def getListOfTransitionsFromExecutionsAutonomoose():
-    pass
 
-def getSetOfExecutionTimesAutonomoose():
-    pass
+
 
 def learnFromTraininingSetAutonomoose(trainingSetConfigurations, transitionData):
+    """
+    Inputs:
+        trainingSetConfigurations
+        transitionData
+    Outputs:
+        CSV output including info about training and validation error MAE and RMS.
+    Other Function Dependencies:
+        
+    """
     
     kf = KFold(n_splits=K_VALUE, shuffle=True)
     
-    listTransitionsToSample = getListOfTransitionsFromExecutionsAutonomoose(transitionData)
+    listTransitionsToSample = getListOfAvailableTransitionsAutonomoose(transitionData)
     
+    print (listTransitionsToSample)
     for transitionId in listTransitionsToSample:
         
         YSet = getSetOfExecutionTimesAutonomoose(transitionData, transitionId)
         
-        learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations, transitionData, kf, YSet)
+#        print (YSet[0][0:10])
+#        print (len(YSet))
+#        exit()
+        learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations, kf, YSet)
         
     
     
