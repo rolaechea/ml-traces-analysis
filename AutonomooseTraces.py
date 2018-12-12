@@ -26,9 +26,6 @@ def getSetOfExecutionTimesAutonomoose(transitionData, transitionId):
     
     TODO  -- Filter out 'dummy transitions' --- could be done when reading input.
     """
-    print("Shall search for all transitions execution times in transitionData for transitionId")
-    print(len(transitionData))
-    print(transitionData[0].keys())
     retArrayExecutionTimes = []
     for dctIdToExecutedTransitions in transitionData:
         tmpLocalDictTimes = []
