@@ -28,7 +28,7 @@ from ConfigurationUtilities  import mean_absolute_error_eff
 excludedTransitions = (16, 17, 22,26, 29, 30,31, 32)
 
 
-MIN_NUM_ARGUMENTS = 5
+MIN_NUM_ARGUMENTS = 3
 K_VALUE = 5
 
 
@@ -67,7 +67,8 @@ def parseRuntimeParemeters(inputParameters):
         SubjectSystem = inputParameters[1]
          
         if SubjectSystem not in MLConstants.lstSubjectSystems:
-             print ("Subject systems must be one of {0}".format(", ".join(MLConstants.lstSubjectSystems)))
+             
+            print ("Subject systems must be one of {0}".format(", ".join(MLConstants.lstSubjectSystems)))
              
              exit()
         
@@ -75,7 +76,9 @@ def parseRuntimeParemeters(inputParameters):
         
         inputFilename = sys.argv[3]           
     else:
+        
         print(" Incorrect Usage. Requires three parameters: Subject System, traininig configurations pkl filename, filename dataset with transitions timing information")
+        
         exit()        
         
     return SubjectSystem, confFilename, inputFilename
@@ -93,21 +96,41 @@ def printOutputHeader():
       "Best Method, Supplemental Best Method Index"))
     
 
-def learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations, transitionArrayOfDictionary, kf, YSet ):
+def learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations, kf, YSet ):
         """
         Perform cross validation to obtain traininig and validation errors for a group of regressor functions
-        """
         
+        
+        Input Parameters Requirements/Preconditions:
+            transition id - a numeric id of a transition.
 
+            trainingSetConfigurations --- a list of configurations.
+                        
+            kf -- a cross validator object.
+            
+            YSet -- a set of values that is an array of executions times of transition id in configurations listed in trainingSetConfigurations            
+            
+        Dependencies Requirements:
+            A class AccumlatedStatisticsAndParamConstants that includes listing of RMS Values, Regressors, etc.
+
+            A function getScaledYForProductSet that
+                Input:
+                    A set of indices referring to positions of confs in the array trainingSetConfigurations, 
+                    YSet -- List of Arrays of Execution Times on each Conf.
+                
+                Returns as output
+                    A sequence scaled Y Values, a scaler, and a boolean whether there are corresponding Y values for the given transition id.    
+            
+        """
         wrapperParamsStats = AccumlatedStatisticsAndParamConstants()
 
         for train_index, test_index in kf.split(trainingSetConfigurations):
             
             YTrainScaledValues, YScaler, TrainHasYVals = getScaledYForProductSet(train_index, YSet)
-            
+
             if TrainHasYVals == False:
-                continue
-            
+                continue            
+
             YTrainOriginal = YScaler.inverse_transform(YTrainScaledValues) # Extract corresponding Y original original through back transformation from scaled Y
             
             XTrainRepeated, XTrainSquareRepeated = getFlattenedXAndDependents(train_index, trainingSetConfigurations, YSet)
@@ -185,7 +208,8 @@ def learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigur
                     wrapperParamsStats.alphasMapeValidation[alphaIndex][index].append(MAPEValidation)
                     wrapperParamsStats.alphasRMSValidation[alphaIndex][index].append(RMSValidation)
 
-            
+        return
+    
         if len(wrapperParamsStats.MAPETrainList[0]) > 0  and len(wrapperParamsStats.MAPEValidationList[0]) > 0:                 
             FullSingleYList = []; [ FullSingleYList.extend(aYBag) for aYBag in YSet]; 
             AverageY =  np.mean(FullSingleYList)
@@ -271,20 +295,25 @@ def learnFromTraininingSetX264(trainingSetConfigurations, transitionArrayOfDicti
     for transitionId in listTransitionsToSample:
         YSet = extractLinearArrayTimeTakenForSingleTransition(transitionArrayOfDictionary, transitionId)
         
-        learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations, transitionArrayOfDictionary, kf, YSet)
+        learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations,  kf, YSet)
         
+def getListOfTransitionsFromExecutionsAutonomoose():
+    pass
 
-def learnFromTraininingSetAutonomoose(trainingSetConfigurations, transitionArrayOfDictionary):
+def getSetOfExecutionTimesAutonomoose():
+    pass
+
+def learnFromTraininingSetAutonomoose(trainingSetConfigurations, transitionData):
     
     kf = KFold(n_splits=K_VALUE, shuffle=True)
     
-    listTransitionsToSample = [3]
+    listTransitionsToSample = getListOfTransitionsFromExecutionsAutonomoose(transitionData)
     
     for transitionId in listTransitionsToSample:
         
-        YSet = extractLinearArrayTimeTakenForSingleTransition(transitionArrayOfDictionary, transitionId)
+        YSet = getSetOfExecutionTimesAutonomoose(transitionData, transitionId)
         
-        learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations, transitionArrayOfDictionary, kf, YSet)
+        learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations, transitionData, kf, YSet)
         
     
     
