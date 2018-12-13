@@ -219,16 +219,18 @@ if __name__ == "__main__":
     SubjectSystem, TraceSourceFolder, TrainingConfSize,  TrainingConfFilename, OutputFilename, verboseDebug = parseRuntimeParemeters(sys.argv)
     
     setBaseTracesSourceFolder(TraceSourceFolder)
-        
+
     if SubjectSystem == MLConstants.x264Name:
         
         TestsetConfigurationSize = 2304-TrainingConfSize
-        
+
+        TrainingSetConfigurations = train_test_split(getAllPossibleIds(MLConstants.x264Id), getAllPossibleIds(MLConstants.x264Id),\
+                                                                                                      train_size=TrainingConfSize, test_size=TestsetConfigurationSize)[0]        
     elif SubjectSystem == MLConstants.autonomooseName:
-        
+
         TestsetConfigurationSize = 32-TrainingConfSize
             
-    TrainingSetConfigurations = train_test_split(getAllPossibleIds(MLConstants.autonomooseId), getAllPossibleIds(MLConstants.autonomooseId),\
+        TrainingSetConfigurations = train_test_split(getAllPossibleIds(MLConstants.autonomooseId), getAllPossibleIds(MLConstants.autonomooseId),\
                                                  train_size=TrainingConfSize, test_size=TestsetConfigurationSize)[0]
        
     saveObjectToPickleFile(TrainingConfFilename, TrainingSetConfigurations)
