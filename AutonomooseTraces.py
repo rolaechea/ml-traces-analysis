@@ -12,34 +12,61 @@ enumLocalizerTransition = 1
 enumWaypointsCollectionTransition = 2
 enumMapServerTransition = 3
 
+
 __dict_TransitionClassNameToId__ = {"LocalizerCompletion" : 1, "WaypointsCollectionCompletion" : 2, "MapServerCompletion": 3, "DynamicObjectTrackingCompletion": 4, \
                                     "OccupancyCompletion":5, "BehaviorPlannerCompletion":6, "LocalPlannerCompletion":7}
 
 ListNoSubTransitions = frozenset([enumLocalizerTransition, enumWaypointsCollectionTransition])
 
 
+transLocalizer = 1
+transWaypointsCollection = 2
 
-def getSetOfExecutionTimesAutonomoose(transitionData, transitionId):
+
+MandatoryTransitions = [transLocalizer]
+
+def generateBitsetForOneConfigurationAutonomoose(configurationId):
+    pass
+
+def IsRealTransitionForGivenConf(transitionId, ConfigurationId):
+#   TODO  -- Filter out 'dummy transitions' --- could be done when reading input.    
+    
+    return True
+
+def getSetOfExecutionTimesAutonomoose(transitionData, transitionId, trainingSetConfigurations):
     """
     Inputs: transitionData -- Array of dicts transitions ids to executed Transition Objects of length N.
     Ouputs: array of lists of executed transition times -- of lenth N.
     
-    TODO  -- Filter out 'dummy transitions' --- could be done when reading input.
+ 
     """
     retArrayExecutionTimes = []
+    
+    i = 0
     for dctIdToExecutedTransitions in transitionData:
+#        print ("Conf {0} -- is -- {1} ".format(i,trainingSetConfigurations[i]))
+
         tmpLocalDictTimes = []
-        if (transitionId) in  dctIdToExecutedTransitions.keys():
+        if ((transitionId) in  dctIdToExecutedTransitions.keys()) and IsRealTransitionForGivenConf(transitionId, trainingSetConfigurations[i]):
             tmpLocalDictTimes = [x.getTimeTaken() for x in dctIdToExecutedTransitions[transitionId]]
             retArrayExecutionTimes.append(tmpLocalDictTimes)
         else:
             retArrayExecutionTimes.append(tmpLocalDictTimes)
-
+        i = i+1
+        
     return retArrayExecutionTimes
 
             
 def getListOfAvailableTransitionsAutonomoose(transitionData):
-    return [3]
+    """
+    Iterate through transition data to obtain a list of available transitions.
+    """    
+    setTransitionIds = set()
+    for dctIdToExecutedTransitions in transitionData:
+        for tmpKey in dctIdToExecutedTransitions.keys():
+            setTransitionIds.add(tmpKey)
+
+    return list(setTransitionIds)
 
 def decodeMessageClassName(classObject):
     """

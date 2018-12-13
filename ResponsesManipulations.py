@@ -15,14 +15,14 @@ from ConfigurationUtilities import generateBitsetForOneConfiguration, transformF
 
 
 
-def getFlattenedXAndDependents(productIndices, XList, Ylist):
+def getFlattenedXAndDependents(productIndices, XList, Ylist, GenerateConfiguration=generateBitsetForOneConfiguration):
     """
     Returns a list of bitmaps for Xlist from the configurations that are in XList indexed by product indices.
     Returns Squares X too.
     """
     YLocalArrayOfBags = [Ylist[xIndex] for xIndex in productIndices ]
     
-    XBitmaps = [generateBitsetForOneConfiguration(XList[xIndex]) for xIndex in productIndices]
+    XBitmaps = [GenerateConfiguration(XList[xIndex]) for xIndex in productIndices]
     
     XBitmapsRepeated = np.repeat(XBitmaps, [len(YBag) for YBag  in YLocalArrayOfBags], axis=0)
     

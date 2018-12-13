@@ -21,8 +21,12 @@ getFlattenedOnlyYForProductSet
 from pickleFacade import loadObjectFromPickle
 
 from TransitionDictionaryManipulations import extractLinearArrayTimeTakenForSingleTransition, calculatePerTransitionsCounts
-from ConfigurationUtilities  import mean_absolute_error_eff
-from AutonomooseTraces import getListOfAvailableTransitionsAutonomoose, getSetOfExecutionTimesAutonomoose
+
+from ConfigurationUtilities  import mean_absolute_error_eff, generateBitsetForOneConfiguration
+
+from PrintingCrossValidationResults import printCrossValidationResults
+
+from AutonomooseTraces import getListOfAvailableTransitionsAutonomoose, getSetOfExecutionTimesAutonomoose, generateBitsetForOneConfigurationAutonomoose
 
 
 # Error 27 incorrectly excluded
@@ -33,11 +37,17 @@ MIN_NUM_ARGUMENTS = 3
 K_VALUE = 5
 
 class XAndYForASingleCVRun(object):
-    def __init__(self, train_index, test_index,  trainingSetConfigurations, YSet):
+    def __init__(self, train_index, test_index,  trainingSetConfigurations, YSet, generateBitsetForOneConfigurationRoutine):
+        
         self.train_index = train_index
+
         self.test_index = test_index
+
         self.trainingSetConfigurations = trainingSetConfigurations
+
         self.YSet = YSet
+        
+        self.generateBitsetForOneConfigurationRoutine = generateBitsetForOneConfigurationRoutine
         
     def calculateTrainAndTestXAndY(self):
         """
@@ -63,12 +73,12 @@ class XAndYForASingleCVRun(object):
 
         self.YTrainOriginal = self.YScaler.inverse_transform(self.YTrainScaledValues) # Extract corresponding Y original original through back transformation from scaled Y
         
-        self.XTrainRepeated, self.XTrainSquareRepeated = getFlattenedXAndDependents(self.train_index, self.trainingSetConfigurations, self.YSet)
+        self.XTrainRepeated, self.XTrainSquareRepeated = getFlattenedXAndDependents(self.train_index, self.trainingSetConfigurations, self.YSet, self.generateBitsetForOneConfigurationRoutine)
 
 #        assert(len(YTrainScaledValues)==len(XTrainRepeated))
 #        assert(len(YTrainScaledValues)==len(XTrainSquareRepeated))
 
-        self.XTest, self.XTestSquares = getFlattenedXAndDependents(self.test_index, self.trainingSetConfigurations, self.YSet)
+        self.XTest, self.XTestSquares = getFlattenedXAndDependents(self.test_index, self.trainingSetConfigurations, self.YSet, self.generateBitsetForOneConfigurationRoutine)
         
         if len(self.XTest) == 0:
             return False # No Y Values in test indices so must skip.
@@ -79,17 +89,59 @@ class XAndYForASingleCVRun(object):
     
     def initializeLinearRegressorArrays(self):
         """
-        Sets arrays to be able to execute linear regressions.
+        Sets arrays to be able to execute linear regressions:
+            allLinear Estimators + two generic X train arrays.
         """
         self.allLinearEsimators =  [LinearRegression(), LinearRegression()]
         
         self.allLinearXTrain = [self.XTrainRepeated, self.XTrainSquareRepeated]
         
         self.allLinearXTest = [self.XTest, self.XTestSquares]
+
+
+    def initializeRegularizedRegressors(self, alphaValue):
+        """
+        Sets arrays for reg. regresion. 
+        Assumes XTrain and XtrainSquare already set.
+        """
+        self.allRidgeEstimators = [Ridge(alpha=alphaValue), Ridge(alpha=alphaValue), Lasso(alpha=alphaValue), Lasso(alpha=alphaValue)]        
             
+
+    def learnRegularizedRegressorsAndStoreErrors(self, index, alphaIndex, wrapperParamsStats):
+        """
+        Executes each regularized linear regression stored in allRidgeEstimators, and stores its corresponding errors.
+        """
+        
+        self.allRidgeEstimators[index].fit(self.allLinearXTrain[index%2], self.YTrainScaledValues)
+        
+        YTrainRidgePredicted = self.YScaler.inverse_transform(self.allRidgeEstimators[index].predict(self.allLinearXTrain[index%2]))
+
+        if index >= 2:
+            YTrainRidgePredicted = np.array([[y] for y in YTrainRidgePredicted])
+        
+        MAPETrain = mean_absolute_error_eff(self.YTrainOriginal, YTrainRidgePredicted)
+        RMSTrain  = mean_squared_error(self.YTrainOriginal, YTrainRidgePredicted)
+
+        wrapperParamsStats.alphasMapeTrain[alphaIndex][index].append(MAPETrain)
+        wrapperParamsStats.alphasRMSTrain[alphaIndex][index].append(RMSTrain)
+
+        YTestRidgePredicted =  self.YScaler.inverse_transform(self.allRidgeEstimators[index].predict(self.allLinearXTest[index%2]))
+
+        if index >= 2:
+            YTestRidgePredicted = np.array([[y] for y in YTestRidgePredicted])
+                           
+        MAPEValidation = mean_absolute_error_eff(self.YTest, YTestRidgePredicted)
+        RMSValidation = mean_squared_error(self.YTest, YTestRidgePredicted)
+
+        wrapperParamsStats.alphasMapeValidation[alphaIndex][index].append(MAPEValidation)
+        wrapperParamsStats.alphasRMSValidation[alphaIndex][index].append(RMSValidation)        
+        
+        
     def learnLinearRegressionAndStoreErrors(self, index, wrapperParamsStats):
         """
-        Executes a Linear Regression (either with features, or with feature and squares) and saves the errors.
+        Executes a Linear Regression (either with features, or with feature and squares) and saves the errors in terms of Mean Absolute Error, and Root Mean Square Error both validation and train.
+        
+        Input wrapperParamsStats: A AccumlatedStatisticsAndParamConstants object where to store the errors.
         """
         self.allLinearEsimators[index].fit(self.allLinearXTrain[index], self.YTrainScaledValues)
         
@@ -169,98 +221,9 @@ def parseRuntimeParemeters(inputParameters):
     return SubjectSystem, confFilename, inputFilename
 
 
-def printOutputHeader():
-    """
-    print a header of the  CSV output.
-    """
-    print("Transition Id, Linear MAPE Average Train , Linear MAPE Average Validation,RMS_T,RMS_V, Linear Squares MAPE Average Train , Linear Squares MAPE Average Validation,RMS_T, RMS_V, Average Y, {0}, {1}, {2}, {3}, {4}".format(\
-      ','.join(["Ridge_Train_"+str(alpha)+", Ridge_Validation__"+str(alpha)+",RMS_T,RMS_V" for alpha in alphaValues]),
-      ','.join(["Ridge_Square_Train_"+str(alpha)+", Ridge_Square_Validation__"+str(alpha)+",RMS_T,RMS_V" for alpha in alphaValues]), \
-      ','.join(["Lasso_Train_"+str(alpha)+", Lasso_Validation_"+str(alpha)+",RMS_T,RMS_V"  for alpha in alphaValues]),\
-      ','.join(["Lasso_Square_Train_"+str(alpha)+", Lasso_Square_Validation__"+str(alpha)+",RMS_T,RMS_V"  for alpha in alphaValues]), \
-      "Best Method, Supplemental Best Method Index"))
-    
 
-def printCrossValidationResults(wrapperParamsStats, transitionId, YSet):
-    """
-        Inputs 
-            wrapperParamsStats -- to calculate stats.
-            YSet -- just to get mean value.
-    """
-    FullSingleYList = []; [ FullSingleYList.extend(aYBag) for aYBag in YSet]; 
-    AverageY =  np.mean(FullSingleYList)
 
-    # Extracting Ridge information.
-    RidgeSingleTrainMape = [np.mean(aMapePairList[0]) for aMapePairList in wrapperParamsStats.alphasMapeTrain]
-    RidgeSingleValidationMape = [np.mean(aMapePairList[0]) for aMapePairList in wrapperParamsStats.alphasMapeValidation]
-
-    RidgeSingleTrainRMS = [np.mean(aMapePairList[0]) for aMapePairList in wrapperParamsStats.alphasRMSTrain]
-    RidgeSingleValidationRMS= [np.mean(aMapePairList[0]) for aMapePairList in wrapperParamsStats.alphasRMSValidation]            
-    
-    JointSingleRidgeStrArray = [str(a)+","+str(b)+","+str(c)+","+str(d) for a,b,c,d in zip(RidgeSingleTrainMape, RidgeSingleValidationMape, RidgeSingleTrainRMS, RidgeSingleValidationRMS)]
-
-    
-    RidgeSquareTrainMape = [np.mean(aMapePairList[1]) for aMapePairList in wrapperParamsStats.alphasMapeTrain]
-    RidgeSquareValidationMape = [np.mean(aMapePairList[1]) for aMapePairList in wrapperParamsStats.alphasMapeValidation]
-
-    RidgeSquareTrainRMS = [np.mean(aMapePairList[1]) for aMapePairList in wrapperParamsStats.alphasRMSTrain]
-    RidgeSquareValidationRMS = [np.mean(aMapePairList[1]) for aMapePairList in wrapperParamsStats.alphasRMSValidation]
-
-    
-    JointSquareRidgeStrArray = [str(a)+","+str(b)+","+str(c)+","+str(d) for a,b,c,d in zip(RidgeSquareTrainMape, RidgeSquareValidationMape, RidgeSquareTrainRMS, RidgeSquareValidationRMS)]
-
-# Lasso Best            
-    LassoSingleTrainMape = [np.mean(aMapePairList[2]) for aMapePairList in wrapperParamsStats.alphasMapeTrain]
-    LassoSingleValidationMape = [np.mean(aMapePairList[2]) for aMapePairList in wrapperParamsStats.alphasMapeValidation]            
-
-    LassoSingleTrainRMS = [np.mean(aMapePairList[2]) for aMapePairList in wrapperParamsStats.alphasRMSTrain]
-    LassoSingleValidationRMS = [np.mean(aMapePairList[2]) for aMapePairList in wrapperParamsStats.alphasRMSValidation]
-
-    JointSingleLassoStrArray = [str(a)+","+str(b)+","+str(c)+","+str(d)  for a,b,c,d in zip(LassoSingleTrainMape, LassoSingleValidationMape, LassoSingleTrainRMS, LassoSingleValidationRMS)]
-
-    LassoSquareTrainMape = [np.mean(aMapePairList[3]) for aMapePairList in wrapperParamsStats.alphasMapeTrain]
-    LassoSquareValidationMape = [np.mean(aMapePairList[3]) for aMapePairList in wrapperParamsStats.alphasMapeValidation]
-
-    LassoSquareTrainRMS = [np.mean(aMapePairList[3]) for aMapePairList in wrapperParamsStats.alphasRMSTrain]
-    LassoSquareValidationRMS = [np.mean(aMapePairList[3]) for aMapePairList in wrapperParamsStats.alphasRMSValidation]
-
-    JointSquareLassoStrArray = [str(a)+","+str(b)+","+str(c)+","+str(d) for a,b,c,d in zip(LassoSquareTrainMape, LassoSquareValidationMape, LassoSquareTrainRMS, LassoSquareValidationRMS)]
-    
-    BestSingleRidgeValidation = np.argmin(RidgeSingleValidationMape)   
-    BestSquareRidgeValidation = np.argmin(RidgeSquareValidationMape)
-    
-    BestSingleLassoValidation = np.argmin(LassoSingleValidationMape)
-    BestSquareLassoValidation = np.argmin(LassoSquareValidationMape)
-
-    SingleLinearMapeValidation =   np.mean(wrapperParamsStats.MAPEValidationList[0])
-    SingleLinearRMSValidation = np.mean(wrapperParamsStats.RMSValidationList[0])
-
-    SquareLinearMapeValidation =   np.mean(wrapperParamsStats.MAPEValidationList[1])
-    SquareLinearRMSValidation = np.mean(wrapperParamsStats.RMSValidationList[1])
-
-    BestMethodIndex = np.argmin([SingleLinearMapeValidation, SquareLinearMapeValidation, RidgeSingleValidationMape[BestSingleRidgeValidation], \
-               RidgeSquareValidationMape[BestSquareRidgeValidation], LassoSingleValidationMape[BestSingleLassoValidation], \
-               LassoSquareValidationMape[BestSquareLassoValidation]])
-    
-    BestMethodName = ["Linear_Simple", "Linear_Squares", "Ridge_Simple", "Ridge_Squares", "Lasso_Simple", "Lasso_Squares"][BestMethodIndex]
-    if BestMethodIndex == 2: 
-        SupplementalBestMethodIndex = BestSingleRidgeValidation
-    elif BestMethodIndex == 3:
-        SupplementalBestMethodIndex = BestSquareRidgeValidation
-    elif BestMethodIndex == 4:
-        SupplementalBestMethodIndex = BestSingleLassoValidation
-    elif BestMethodIndex == 5:
-        SupplementalBestMethodIndex = BestSquareLassoValidation
-    else:
-        SupplementalBestMethodIndex = 0
-        
-    print("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15}".format(transitionId, np.mean(wrapperParamsStats.MAPETrainList[0]), SingleLinearMapeValidation, \
-           SingleLinearRMSValidation, np.mean(wrapperParamsStats.RMSTrainList[1]), np.mean(wrapperParamsStats.MAPETrainList[1]), SquareLinearMapeValidation, np.mean(wrapperParamsStats.RMSTrainList[0]), SquareLinearRMSValidation, AverageY, \
-           ','.join(JointSingleRidgeStrArray), ','.join(JointSquareRidgeStrArray), \
-           ','.join(JointSingleLassoStrArray), ','.join(JointSquareLassoStrArray), \
-           BestMethodName, SupplementalBestMethodIndex))
-
-def learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations, kf, YSet ):
+def learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations, kf, YSet, generateBitsetForOneConfigurationRoutine ):
         """
         Perform cross validation to obtain traininig and validation errors for a group of regressor functions
         
@@ -290,7 +253,7 @@ def learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigur
 
         for train_index, test_index in kf.split(trainingSetConfigurations):
                 
-            CVInputsAndOutputsContainer = XAndYForASingleCVRun(train_index, test_index, trainingSetConfigurations, YSet)
+            CVInputsAndOutputsContainer = XAndYForASingleCVRun(train_index, test_index, trainingSetConfigurations, YSet, generateBitsetForOneConfigurationRoutine)
             
             CVInputsAndOutputsContainer.calculateTrainAndTestXAndY()
             
@@ -303,38 +266,16 @@ def learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigur
 
                 CVInputsAndOutputsContainer.learnLinearRegressionAndStoreErrors(index, wrapperParamsStats)
             
-
             #
             # Iteration thorugh alpha values.
             for alphaValue, alphaIndex in zip(alphaValues, range(0, len(alphaValues))):
                 
-                allRidgeEstimators = [Ridge(alpha=alphaValue), Ridge(alpha=alphaValue), Lasso(alpha=alphaValue), Lasso(alpha=alphaValue)]
                 
-                for index in range(0, len(allRidgeEstimators)):
-                        
-                    allRidgeEstimators[index].fit(CVInputsAndOutputsContainer.allLinearXTrain[index%2], CVInputsAndOutputsContainer.YTrainScaledValues)
-                    
-                    YTrainRidgePredicted = CVInputsAndOutputsContainer.YScaler.inverse_transform(allRidgeEstimators[index].predict(CVInputsAndOutputsContainer.allLinearXTrain[index%2]))
-
-                    if index >= 2:
-                        YTrainRidgePredicted = np.array([[y] for y in YTrainRidgePredicted])
-                    
-                    MAPETrain = mean_absolute_error_eff(CVInputsAndOutputsContainer.YTrainOriginal, YTrainRidgePredicted)
-                    RMSTrain  = mean_squared_error(CVInputsAndOutputsContainer.YTrainOriginal, YTrainRidgePredicted)
-
-                    wrapperParamsStats.alphasMapeTrain[alphaIndex][index].append(MAPETrain)
-                    wrapperParamsStats.alphasRMSTrain[alphaIndex][index].append(RMSTrain)
-
-                    YTestRidgePredicted =  CVInputsAndOutputsContainer.YScaler.inverse_transform(allRidgeEstimators[index].predict(CVInputsAndOutputsContainer.allLinearXTest[index%2]))
-
-                    if index >= 2:
-                        YTestRidgePredicted = np.array([[y] for y in YTestRidgePredicted])
-                                       
-                    MAPEValidation = mean_absolute_error_eff(CVInputsAndOutputsContainer.YTest, YTestRidgePredicted)
-                    RMSValidation = mean_squared_error(CVInputsAndOutputsContainer.YTest, YTestRidgePredicted)
-
-                    wrapperParamsStats.alphasMapeValidation[alphaIndex][index].append(MAPEValidation)
-                    wrapperParamsStats.alphasRMSValidation[alphaIndex][index].append(RMSValidation)
+                CVInputsAndOutputsContainer.initializeRegularizedRegressors(alphaValue)
+                
+                
+                for index in range(0, len(CVInputsAndOutputsContainer.allRidgeEstimators)):
+                    CVInputsAndOutputsContainer.learnRegularizedRegressorsAndStoreErrors(index, alphaIndex, wrapperParamsStats)
     
         if len(wrapperParamsStats.MAPETrainList[0]) > 0  and len(wrapperParamsStats.MAPEValidationList[0]) > 0:
             printCrossValidationResults(wrapperParamsStats, transitionId, YSet)
@@ -355,7 +296,7 @@ def learnFromTraininingSetX264(trainingSetConfigurations, transitionArrayOfDicti
     for transitionId in listTransitionsToSample:
         YSet = extractLinearArrayTimeTakenForSingleTransition(transitionArrayOfDictionary, transitionId)
 
-        learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations,  kf, YSet)
+        learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations,  kf, YSet, generateBitsetForOneConfiguration)
         
 
 
@@ -369,18 +310,16 @@ def learnFromTraininingSetAutonomoose(trainingSetConfigurations, transitionData)
         CSV output including info about training and validation error MAE and RMS.
     Other Function Dependencies:
         
-    """
-    
+    """    
     kf = KFold(n_splits=K_VALUE, shuffle=True)
     
     listTransitionsToSample = getListOfAvailableTransitionsAutonomoose(transitionData)
-    
-
+        
     for transitionId in listTransitionsToSample:
         
-        YSet = getSetOfExecutionTimesAutonomoose(transitionData, transitionId)
+        YSet = getSetOfExecutionTimesAutonomoose(transitionData, transitionId, trainingSetConfigurations)
         
-        learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations, kf, YSet)
+        learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigurations, kf, YSet, generateBitsetForOneConfigurationAutonomoose)
         
     
     
