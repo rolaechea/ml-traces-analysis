@@ -11,19 +11,19 @@ from GenericTraces import ExecutionTrace, TransitionType
 enumLocalizerTransition = 1
 enumWaypointsCollectionTransition = 2
 enumMapServerTransition = 3
-
+enumDynamicObjectTransition = 4
+enumOccupancyTransition = 5
+enumBehaviourPlannerTransition = 6
+enumLocalPlannerTransition = 7
 
 __dict_TransitionClassNameToId__ = {"LocalizerCompletion" : 1, "WaypointsCollectionCompletion" : 2, "MapServerCompletion": 3, "DynamicObjectTrackingCompletion": 4, \
                                     "OccupancyCompletion":5, "BehaviorPlannerCompletion":6, "LocalPlannerCompletion":7}
 
+
 ListNoSubTransitions = frozenset([enumLocalizerTransition, enumWaypointsCollectionTransition])
 
 
-transLocalizer = 1
-transWaypointsCollection = 2
-
-
-MandatoryTransitions = [transLocalizer]
+ListMandatoryTransitions = frozenset([enumLocalizerTransition, enumMapServerTransition, enumOccupancyTransition, enumBehaviourPlannerTransition, enumLocalPlannerTransition])
 
 dctConfToBitsetAutonomoose = {}
 
@@ -86,11 +86,23 @@ def generateBitsetForOneConfigurationAutonomoose(configurationId):
     return bitmapIndex
     
 
+
 def IsRealTransitionForGivenConf(transitionId, ConfigurationId):
 #   TODO  -- Filter out 'dummy transitions' --- should be done when reading input.    
+#   'Dummy' transitions should take 0 time and/or be ignored. 
     
-    return True
+    if transitionId in ListMandatoryTransitions:
+        return True
+    else:
+        if enumWaypointsCollectionTransition == transitionId:
+            # Waypoints Collection on ?                        
+            return generateBitsetForOneConfigurationAutonomoose(ConfigurationId)[2] == 1           
+        else:
+            # DynamicObjectTracking on ?            
+            return generateBitsetForOneConfigurationAutonomoose(ConfigurationId)[3] == 1
 
+        # depends if we are on waypoints collection or DynamicObjectTracking transition.
+        
 def getSetOfExecutionTimesAutonomoose(transitionData, transitionId, trainingSetConfigurations):
     """
     Inputs: transitionData -- Array of dicts transitions ids to executed Transition Objects of length N.
