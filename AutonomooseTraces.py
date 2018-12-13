@@ -38,6 +38,9 @@ def generateBitsetForOneConfigurationAutonomoose(configurationId):
         Dyn. Object Tracking
         Dyn. Car Tracking.
         Dyn. Person Tracking
+        
+    Perf. Optimization -- Caching
+    
     """
     
     if configurationId in dctConfToBitsetAutonomoose.keys():
@@ -77,7 +80,6 @@ def generateBitsetForOneConfigurationAutonomoose(configurationId):
         bitmapIndex.append(1) #  active_avod_bb_car  == true
         bitmapIndex.append(1) #  active_avod_bb_person  == true
         # dynamicCompletionIndex == 3:
-#    print ("Configuration {0} becomes bitmap {1}".format(configurationId, bitmapIndex))
 
     dctConfToBitsetAutonomoose[configurationId] = bitmapIndex
     
