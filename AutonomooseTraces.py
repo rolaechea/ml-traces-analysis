@@ -25,11 +25,67 @@ transWaypointsCollection = 2
 
 MandatoryTransitions = [transLocalizer]
 
+dctConfToBitsetAutonomoose = {}
+
 def generateBitsetForOneConfigurationAutonomoose(configurationId):
-    pass
+    """
+    Generates a bitset of features (0/1) from a configuration id for Autonomoose.
+    
+    Features are listed in the following order:
+        Behavior Planner
+        Occupancy or Mockupancy Planner
+        Waypoints Collection
+        Dyn. Object Tracking
+        Dyn. Car Tracking.
+        Dyn. Person Tracking
+    """
+    
+    if configurationId in dctConfToBitsetAutonomoose.keys():
+       return  dctConfToBitsetAutonomoose[configurationId]
+   
+    bitmapIndex = []
+    BooleanOptions = [("BEHAVIOR", 4 ), \
+                      ("OCCUPANCY", 2),
+                      ("WAYPOINTS", 1)]
+
+    i = configurationId - (int(configurationId/8)*8)
+
+    for (name, divisor) in BooleanOptions:
+        if int(i/divisor) > 0:
+            bitmapIndex.append(1)
+        else:
+            bitmapIndex.append(0)        
+        subtractValue = int(i/divisor)*divisor
+        i = i - subtractValue
+
+    dynamicCompletionIndex = int(configurationId/8)
+    
+    if dynamicCompletionIndex == 0:
+        bitmapIndex.append(0)  #  active_dynamic_object_tracking == false
+        bitmapIndex.append(0)  #  active_avod_bb_car  == false
+        bitmapIndex.append(0)  #  active_avod_bb_person  == false                              
+    elif dynamicCompletionIndex == 1:
+        bitmapIndex.append(1)  #  active_dynamic_object_tracking == true
+        bitmapIndex.append(0)  #  active_avod_bb_car  == false        
+        bitmapIndex.append(1)  #  active_avod_bb_person  == true 
+    elif dynamicCompletionIndex == 2:
+        bitmapIndex.append(1)  #  active_dynamic_object_tracking == true  
+        bitmapIndex.append(1)  #  active_avod_bb_car  == true
+        bitmapIndex.append(0)  #  active_avod_bb_person  == false                             
+    else:
+        bitmapIndex.append(1) #  active_dynamic_object_tracking == true  
+        bitmapIndex.append(1) #  active_avod_bb_car  == true
+        bitmapIndex.append(1) #  active_avod_bb_person  == true
+        # dynamicCompletionIndex == 3:
+#    print ("Configuration {0} becomes bitmap {1}".format(configurationId, bitmapIndex))
+
+    dctConfToBitsetAutonomoose[configurationId] = bitmapIndex
+    
+    return bitmapIndex
+    
 
 def IsRealTransitionForGivenConf(transitionId, ConfigurationId):
-#   TODO  -- Filter out 'dummy transitions' --- could be done when reading input.    
+#   TODO  -- Filter out 'dummy transitions' --- should be done when reading input.    
     
     return True
 

@@ -24,7 +24,7 @@ from TransitionDictionaryManipulations import extractLinearArrayTimeTakenForSing
 
 from ConfigurationUtilities  import mean_absolute_error_eff, generateBitsetForOneConfiguration
 
-from PrintingCrossValidationResults import printCrossValidationResults
+from PrintingCrossValidationResults import printCrossValidationResults, printOutputHeader
 
 from AutonomooseTraces import getListOfAvailableTransitionsAutonomoose, getSetOfExecutionTimesAutonomoose, generateBitsetForOneConfigurationAutonomoose
 
