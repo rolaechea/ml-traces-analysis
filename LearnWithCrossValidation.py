@@ -255,7 +255,10 @@ def learnAndCrossValidateForATransitionGeneric(transitionId, trainingSetConfigur
                 
             CVInputsAndOutputsContainer = XAndYForASingleCVRun(train_index, test_index, trainingSetConfigurations, YSet, generateBitsetForOneConfigurationRoutine)
             
-            CVInputsAndOutputsContainer.calculateTrainAndTestXAndY()
+            tmpRetVal =  CVInputsAndOutputsContainer.calculateTrainAndTestXAndY()
+            
+            if tmpRetVal == False:
+                continue
             
             CVInputsAndOutputsContainer.initializeLinearRegressorArrays()
 
