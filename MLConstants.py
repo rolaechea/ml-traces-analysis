@@ -24,3 +24,6 @@ lstSubjectSystems = [autonomooseName, x264Name]
 
 autonomooseId = 0
 x264Id = 1
+
+
+AutonomooseConfCount = 32
