@@ -6,25 +6,29 @@ Created on Wed Nov 21 16:03:51 2018
 @author: rafaelolaechea
 """
 import sys
+import itertools
+
+
+from sklearn.preprocessing import  StandardScaler
+
 
 from pickleFacade import loadObjectFromPickle, saveObjectToPickleFile
 from ParseTrace import  getAllTransitionsIdsList
 
-from sklearn.preprocessing import  StandardScaler
 from RegressorsUtils import  getBestMethodPerTransition,  crateRegressorWrapperFromTuple
 from TransitionDictionaryManipulations import extractLinearArrayTimeTakenForSingleTransition
 
 from RegressorsUtils import getXBitmapsForRegression
 
-import itertools
 
+import MLConstants
 
-def FitTrainDataFroRegressor(theRegressor, trainOrderedConfs, trainDataset):
+from AutonomooseTraces import getListOfAvailableTransitionsAutonomoose, getSetOfExecutionTimesAutonomoose
+
+def FitTrainDataFroRegressor(theRegressor, trainOrderedConfs, YSet):
     """
     Given a regressor wrapper (already initialized), fit the data (including storing  the scaler in the  regressor)
-    """
-    YSet = extractLinearArrayTimeTakenForSingleTransition(trainDataset, theRegressor.getTransitionId())
-
+    """    
     SingleYList = list(itertools.chain.from_iterable(YSet))
 
     YLocalScaler =   StandardScaler()
@@ -39,39 +43,74 @@ def FitTrainDataFroRegressor(theRegressor, trainOrderedConfs, trainDataset):
     
     theRegressor.getRegressor().fit(XBitmaps, SingleYScaledList)
                 
+
+MIN_NUM_ARGUMENTS = 5
+
+def parseRuntimeParemeters(inputParameters):
+    """
+    Parses command-line arguments.
+    If incorrect arguments, then prints error message and exit.  
     
-if __name__ == "__main__":
-    if   len(sys.argv) > 4:
+    Arguments 
+        Subject System -- autonomoose or x264
+      
+    """
+    if  len(inputParameters) > MIN_NUM_ARGUMENTS:
+
+        SubjectSystem = inputParameters[1]
+         
+        if SubjectSystem not in MLConstants.lstSubjectSystems:
+             
+            print ("Subject systems must be one of {0}".format(", ".join(MLConstants.lstSubjectSystems)))
+             
+            exit()
         
-        sampleTrainFilename = sys.argv[1]
-                
-        confTrainFilename = sys.argv[2]
-                
-        CvResultsFilename = sys.argv[3]
-
-        RegressorOutputFilename = sys.argv[4]        
-
+        sampleTrainFilename = sys.argv[2]
+        
+        confTrainFilename = sys.argv[3]       
+        
+        CVResultsFilename = sys.argv[4]
+        
+        RegressorOutputFilename = sys.argv[5]
     else:
-        print("Incorrect usage -  requires 4 filenames parameters: train data set," \
-              "train configurations, results of CV,  output of regressor list")
-        exit(0)
+        
+        print(" Incorrect Usage. Requires five parameters: Subject System, sampleTrainFilename, confTrainFilename, CvResultsFilenamem, RegressorOutputFilename")
+        
+        exit()        
+        
+    return SubjectSystem, sampleTrainFilename, confTrainFilename, CVResultsFilename, RegressorOutputFilename
+
+
+if __name__ == "__main__":
+
+    SubjectSystem, sampleTrainFilename, confTrainFilename, CVResultsFilename, RegressorOutputFilename = parseRuntimeParemeters(sys.argv)
     
-    bestRegressorPerTransition = getBestMethodPerTransition(CvResultsFilename)
+    bestRegressorPerTransition = getBestMethodPerTransition(CVResultsFilename)
     
     trainDataset, trainOrderedConfs  = loadObjectFromPickle(sampleTrainFilename), \
         loadObjectFromPickle(confTrainFilename)
         
-    listTransitionToSample = getAllTransitionsIdsList()
-    
-    # As we don't yet have sampling ratios for 27.
-    if 27 not in listTransitionToSample:
-        listTransitionToSample.append(27)
-    
+    if SubjectSystem == MLConstants.x264Name:
+ 
+        listTransitionToSample = getAllTransitionsIdsList()
+        
+    elif SubjectSystem == MLConstants.autonomooseName:
+        
+        listTransitionToSample = getListOfAvailableTransitionsAutonomoose(trainDataset)
+        
     RegressorList = []
     for transitionId in listTransitionToSample:
          newRegressor = crateRegressorWrapperFromTuple(transitionId, bestRegressorPerTransition[transitionId])
 
-         FitTrainDataFroRegressor(newRegressor, trainOrderedConfs, trainDataset)
+         if SubjectSystem == MLConstants.x264Name:
+             
+             YSet = extractLinearArrayTimeTakenForSingleTransition(trainDataset, newRegressor.getTransitionId())
+             
+         else:
+             
+             YSet = getSetOfExecutionTimesAutonomoose(trainDataset, newRegressor.getTransitionId(), trainOrderedConfs)
+             
+         FitTrainDataFroRegressor(newRegressor, trainOrderedConfs, YSet)
          
          RegressorList.append(newRegressor)
     
