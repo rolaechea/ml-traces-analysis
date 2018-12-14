@@ -1,0 +1,10 @@
+python AssesLearntFunction.py $1sampled_460_rep_1.pkl $1train_conf_460_rep_1.pkl $1best_method_460_rep_1.csv $1test_sampled_460_rep_1.pkl $1test_conf_460_rep_1.pkl  > $1test_results_460_rep_1.csv
+python AssesLearntFunction.py $1sampled_460_rep_2.pkl $1train_conf_460_rep_2.pkl $1best_method_460_rep_2.csv $1test_sampled_460_rep_2.pkl $1test_conf_460_rep_2.pkl  > $1test_results_460_rep_2.csv
+python AssesLearntFunction.py $1sampled_460_rep_3.pkl $1train_conf_460_rep_3.pkl $1best_method_460_rep_3.csv $1test_sampled_460_rep_3.pkl $1test_conf_460_rep_3.pkl  > $1test_results_460_rep_3.csv
+python AssesLearntFunction.py $1sampled_460_rep_4.pkl $1train_conf_460_rep_4.pkl $1best_method_460_rep_4.csv $1test_sampled_460_rep_4.pkl $1test_conf_460_rep_4.pkl  > $1test_results_460_rep_4.csv
+python AssesLearntFunction.py $1sampled_460_rep_5.pkl $1train_conf_460_rep_5.pkl $1best_method_460_rep_5.csv $1test_sampled_460_rep_5.pkl $1test_conf_460_rep_5.pkl  > $1test_results_460_rep_5.csv
+python AssesLearntFunction.py $1sampled_460_rep_6.pkl $1train_conf_460_rep_6.pkl $1best_method_460_rep_6.csv $1test_sampled_460_rep_6.pkl $1test_conf_460_rep_6.pkl  > $1test_results_460_rep_6.csv
+python AssesLearntFunction.py $1sampled_460_rep_7.pkl $1train_conf_460_rep_7.pkl $1best_method_460_rep_7.csv $1test_sampled_460_rep_7.pkl $1test_conf_460_rep_7.pkl  > $1test_results_460_rep_7.csv
+python AssesLearntFunction.py $1sampled_460_rep_8.pkl $1train_conf_460_rep_8.pkl $1best_method_460_rep_8.csv $1test_sampled_460_rep_8.pkl $1test_conf_460_rep_8.pkl  > $1test_results_460_rep_8.csv
+python AssesLearntFunction.py $1sampled_460_rep_9.pkl $1train_conf_460_rep_9.pkl $1best_method_460_rep_9.csv $1test_sampled_460_rep_9.pkl $1test_conf_460_rep_9.pkl  > $1test_results_460_rep_9.csv
+python AssesLearntFunction.py $1sampled_460_rep_10.pkl $1train_conf_460_rep_10.pkl $1best_method_460_rep_10.csv $1test_sampled_460_rep_10.pkl $1test_conf_460_rep_10.pkl  > $1test_results_460_rep_10.csv
