@@ -1,1 +1,1 @@
-bash execution_scripts/ExecuteTraining.sh autonomoose autonomooseFirst/ autonomooseFirst/results/
+bash execution_scripts/ExecuteTesting.sh autonomoose autonomooseFirst/ autonomooseFirst/results/
