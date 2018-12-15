@@ -48,7 +48,7 @@ def parseRuntimeParemeters(inputParameters):
     TraceSourceFolder = ""
     
 
-    if   len(inputParameters) > 4:
+    if   len(inputParameters) > MIN_NUM_ARGUMENTS:
 
         SubjectSystem = inputParameters[1]
          
@@ -65,7 +65,7 @@ def parseRuntimeParemeters(inputParameters):
         
         assesmentSampledFilename = inputParameters[5]
         
-        if len(inputParameters) > 6:
+        if len(inputParameters) > (MIN_NUM_ARGUMENTS + 2):
             
             useDifferentialSampling = True
             
@@ -73,7 +73,7 @@ def parseRuntimeParemeters(inputParameters):
             
             preExistingSampledDatasetFilename =  inputParameters[7]
 
-        if len(inputParameters) > 8:
+        if len(inputParameters) > (MIN_NUM_ARGUMENTS + 4):
             useDifferentialSamplingExtra = True
 
             preExistingSampledConfsFilenameExtra = inputParameters[8]
