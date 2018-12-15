@@ -1,0 +1,1 @@
+bash execution_scripts/generateRegressors.sh autonomoose autonomooseSecond/ autonomooseSecond/results/
