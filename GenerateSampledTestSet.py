@@ -56,38 +56,32 @@ def parseRuntimeParemeters(inputParameters):
              print ("Subject systems must be one of {0}".format(", ".join(MLConstants.lstSubjectSystems)))
              
              exit()        
-        
-        currentParamIndex = 1
-        
-        if SubjectSystem == MLConstants.autonomooseName:
-            
-            TraceSourceFolder = inputParameters[2]
-            
-            currentParamIndex = currentParamIndex + 1
-            
-        confTrainFilename = inputParameters[currentParamIndex + 1]        
 
-        assesmentConfsFilename = inputParameters[currentParamIndex + 2]
+        TraceSourceFolder = inputParameters[2]
+                        
+        confTrainFilename = inputParameters[3]        
+
+        assesmentConfsFilename = inputParameters[4]
         
-        assesmentSampledFilename = inputParameters[currentParamIndex + 3]
+        assesmentSampledFilename = inputParameters[5]
         
-        if len(inputParameters) > (currentParamIndex+4):
+        if len(inputParameters) > 6:
             
             useDifferentialSampling = True
             
-            preExistingSampledConfsFilename = inputParameters[currentParamIndex + 4]
+            preExistingSampledConfsFilename = inputParameters[6]
             
-            preExistingSampledDatasetFilename =  inputParameters[currentParamIndex + 5]
+            preExistingSampledDatasetFilename =  inputParameters[7]
 
-        if len(inputParameters) > (currentParamIndex + 6):
+        if len(inputParameters) > 8:
             useDifferentialSamplingExtra = True
 
-            preExistingSampledConfsFilenameExtra = inputParameters[currentParamIndex + 6]
+            preExistingSampledConfsFilenameExtra = inputParameters[8]
 
-            preExistingSampledDatasetFilenameExtra =  inputParameters[currentParamIndex + 7]        
+            preExistingSampledDatasetFilenameExtra =  inputParameters[9]        
     else:
 
-        print("Incorrect usage -  requires >= 4/5 filenames parameters: Subject System, (Trace Folder for Moose), train conf pkl, test conf pkl, and test conf sampled,  . Optional 2 (or 4)  more for differential sampling, preceeded by subjectName and optional baseName for moose ")
+        print("Incorrect usage -  requires >= 5 filenames parameters: Subject System, Trace Folder, train conf pkl, test conf pkl, and test conf sampled,  . Optional 2 (or 4)  more for differential sampling, preceeded by subjectName and optional baseName for moose ")
         exit(0)
 
     return SubjectSystem, TraceSourceFolder, confTrainFilename, assesmentConfsFilename, assesmentSampledFilename, \
@@ -103,12 +97,15 @@ if __name__ == "__main__":
         
     confsTrain = loadObjectFromPickle(confTrainFilename)
     
+    setBaseTracesSourceFolder(TraceSourceFolder)
+    
     if SubjectSystem == MLConstants.x264Name:
 
         confsTest = getComplementSet(confsTrain)    
 
          # X264 only preprocessing.       
         dictRatios = getTestSetSamplingRatiosDict()    
+        
         
         if useDifferentialSampling:
             
@@ -123,7 +120,6 @@ if __name__ == "__main__":
             DatasetAlreadySampledExtra = loadObjectFromPickle(preExistingSampledDatasetFilenameExtra)            
         
     else:
-        setBaseTracesSourceFolder(TraceSourceFolder)
         
         allTracesAutonomoose = loadObjectFromPickle(getSingleFilenameWithAllTraces())
                 
@@ -133,10 +129,6 @@ if __name__ == "__main__":
         
     saveObjectToPickleFile(assesmentConfsFilename, confsTest)
     
-
-    
-
-
     DictionaryArray = []
     counter = 0
     
