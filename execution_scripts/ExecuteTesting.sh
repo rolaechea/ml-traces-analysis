@@ -1,10 +1,10 @@
-python AssesLearntFunction.py $1sampled_rep_1.pkl $1train_conf_rep_1.pkl $1best_method_rep_1.csv $1test_sampled_rep_1.pkl $1test_conf_rep_1.pkl  > $1test_results_rep_1.csv
-python AssesLearntFunction.py $1sampled_rep_2.pkl $1train_conf_rep_2.pkl $1best_method_rep_2.csv $1test_sampled_rep_2.pkl $1test_conf_rep_2.pkl  > $1test_results_rep_2.csv
-python AssesLearntFunction.py $1sampled_rep_3.pkl $1train_conf_rep_3.pkl $1best_method_rep_3.csv $1test_sampled_rep_3.pkl $1test_conf_rep_3.pkl  > $1test_results_rep_3.csv
-python AssesLearntFunction.py $1sampled_rep_4.pkl $1train_conf_rep_4.pkl $1best_method_rep_4.csv $1test_sampled_rep_4.pkl $1test_conf_rep_4.pkl  > $1test_results_rep_4.csv
-python AssesLearntFunction.py $1sampled_rep_5.pkl $1train_conf_rep_5.pkl $1best_method_rep_5.csv $1test_sampled_rep_5.pkl $1test_conf_rep_5.pkl  > $1test_results_rep_5.csv
-python AssesLearntFunction.py $1sampled_rep_6.pkl $1train_conf_rep_6.pkl $1best_method_rep_6.csv $1test_sampled_rep_6.pkl $1test_conf_rep_6.pkl  > $1test_results_rep_6.csv
-python AssesLearntFunction.py $1sampled_rep_7.pkl $1train_conf_rep_7.pkl $1best_method_rep_7.csv $1test_sampled_rep_7.pkl $1test_conf_rep_7.pkl  > $1test_results_rep_7.csv
-python AssesLearntFunction.py $1sampled_rep_8.pkl $1train_conf_rep_8.pkl $1best_method_rep_8.csv $1test_sampled_rep_8.pkl $1test_conf_rep_8.pkl  > $1test_results_rep_8.csv
-python AssesLearntFunction.py $1sampled_rep_9.pkl $1train_conf_rep_9.pkl $1best_method_rep_9.csv $1test_sampled_rep_9.pkl $1test_conf_rep_9.pkl  > $1test_results_rep_9.csv
-python AssesLearntFunction.py $1sampled_rep_10.pkl $1train_conf_rep_10.pkl $1best_method_rep_10.csv $1test_sampled_rep_10.pkl $1test_conf_rep_10.pkl  > $1test_results_rep_10.csv
+python AssesLearntFunction.py $1 $2sampled_rep_1.pkl $2train_conf_rep_1.pkl $3best_method_rep_1.csv $2test_sampled_rep_1.pkl $2test_conf_rep_1.pkl  > $3test_results_rep_1.csv
+python AssesLearntFunction.py $1 $2sampled_rep_2.pkl $2train_conf_rep_2.pkl $3best_method_rep_2.csv $2test_sampled_rep_2.pkl $2test_conf_rep_2.pkl  > $3test_results_rep_2.csv
+python AssesLearntFunction.py $1 $2sampled_rep_3.pkl $2train_conf_rep_3.pkl $3best_method_rep_3.csv $2test_sampled_rep_3.pkl $2test_conf_rep_3.pkl  > $3test_results_rep_3.csv
+python AssesLearntFunction.py $1 $2sampled_rep_4.pkl $2train_conf_rep_4.pkl $3best_method_rep_4.csv $2test_sampled_rep_4.pkl $2test_conf_rep_4.pkl  > $3test_results_rep_4.csv
+python AssesLearntFunction.py $1 $2sampled_rep_5.pkl $2train_conf_rep_5.pkl $3best_method_rep_5.csv $2test_sampled_rep_5.pkl $2test_conf_rep_5.pkl  > $3test_results_rep_5.csv
+python AssesLearntFunction.py $1 $2sampled_rep_6.pkl $2train_conf_rep_6.pkl $3best_method_rep_6.csv $2test_sampled_rep_6.pkl $2test_conf_rep_6.pkl  > $3test_results_rep_6.csv
+python AssesLearntFunction.py $1 $2sampled_rep_7.pkl $2train_conf_rep_7.pkl $3best_method_rep_7.csv $2test_sampled_rep_7.pkl $2test_conf_rep_7.pkl  > $3test_results_rep_7.csv
+python AssesLearntFunction.py $1 $2sampled_rep_8.pkl $2train_conf_rep_8.pkl $3best_method_rep_8.csv $2test_sampled_rep_8.pkl $2test_conf_rep_8.pkl  > $3test_results_rep_8.csv
+python AssesLearntFunction.py $1 $2sampled_rep_9.pkl $2train_conf_rep_9.pkl $3best_method_rep_9.csv $2test_sampled_rep_9.pkl $2test_conf_rep_9.pkl  > $3test_results_rep_9.csv
+python AssesLearntFunction.py $1 $2sampled_rep_10.pkl $2train_conf_rep_10.pkl $3best_method_rep_10.csv $2test_sampled_rep_10.pkl $2test_conf_rep_10.pkl  > $3test_results_rep_10.csv
