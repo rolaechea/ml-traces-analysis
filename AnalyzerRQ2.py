@@ -18,8 +18,6 @@ from pickleFacade import loadObjectFromPickle
 
 
 
-
-
 def print_help():
     """
     Print statements explaining how program is used.
@@ -27,9 +25,11 @@ def print_help():
     Program reads through a list of test traces and predicts execution time based on execution counts, versus actual times. 
     
     """
-    print("python AnalyzerRQ2.py regressors.pkl testConf.pkl")
+    print("python AnalyzerRQ2.py SubjecySystem regressors.pkl testConf.pkl")
+    print("SubjecySystem either autonomoose or x264")
     print("regressors.pkl pickled file containing one regressor for each transition.")
-    print("regressors.pkl pickled file containing an array of test configurations on which to evalaute the regressors.")
+    print("testConf.pkl pickled file containing an array of test configurations on which to evalaute the regressors.")
+    
     
 def check_accuracy_for_overall_time_prediction():
     """
