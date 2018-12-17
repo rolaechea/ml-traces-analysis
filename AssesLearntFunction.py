@@ -165,6 +165,9 @@ if __name__ == "__main__":
         
     print ("Transition Id, YMean_Train, Y_Std_Train, MAE_Train, MAE_Std_Train, YMean_Test, Y_Std_Test, MAE_Test, MAE_Std_Test")
     for transitionId in transitionIdList:
+        if (not (transitionId in bestRegressorPerTransition.keys())):
+            continue
+            
         if SubjectSystem == MLConstants.x264Name:
              YSetTrain = extractLinearArrayTimeTakenForSingleTransition(trainDataset, transitionId)
         else:
