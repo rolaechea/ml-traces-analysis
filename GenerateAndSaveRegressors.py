@@ -73,6 +73,7 @@ def parseRuntimeParemeters(inputParameters):
         
         RegressorOutputFilename = sys.argv[5]
     else:
+        print (len(inputParameters))
         
         print(" Incorrect Usage. Requires five parameters: Subject System, sampleTrainFilename, confTrainFilename, CvResultsFilenamem, RegressorOutputFilename")
         
@@ -100,18 +101,21 @@ if __name__ == "__main__":
         
     RegressorList = []
     for transitionId in listTransitionToSample:
-         newRegressor = crateRegressorWrapperFromTuple(transitionId, bestRegressorPerTransition[transitionId])
-
-         if SubjectSystem == MLConstants.x264Name:
+        if transitionId in bestRegressorPerTransition.keys():
+            newRegressor = crateRegressorWrapperFromTuple(transitionId, bestRegressorPerTransition[transitionId])
+        else:
+            continue
+        
+        if SubjectSystem == MLConstants.x264Name:
              
-             YSet = extractLinearArrayTimeTakenForSingleTransition(trainDataset, newRegressor.getTransitionId())
+            YSet = extractLinearArrayTimeTakenForSingleTransition(trainDataset, newRegressor.getTransitionId())
              
-         else:
+        else:
              
-             YSet = getSetOfExecutionTimesAutonomoose(trainDataset, newRegressor.getTransitionId(), trainOrderedConfs)
+            YSet = getSetOfExecutionTimesAutonomoose(trainDataset, newRegressor.getTransitionId(), trainOrderedConfs)
              
-         FitTrainDataFroRegressor(newRegressor, trainOrderedConfs, YSet)
+        FitTrainDataFroRegressor(newRegressor, trainOrderedConfs, YSet)
          
-         RegressorList.append(newRegressor)
+        RegressorList.append(newRegressor)
     
     saveObjectToPickleFile(RegressorOutputFilename, RegressorList)
