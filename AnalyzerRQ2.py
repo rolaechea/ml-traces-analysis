@@ -9,11 +9,14 @@ import sys
 
 import numpy as np
 
-from sklearn.preprocessing import  StandardScaler
+
 
 import MLConstants
+
 from ConfigurationUtilities import generateBitsetForOneConfiguration, transformFeatureBitmapsToIncludeSquares, mean_absolute_error_and_stdev_eff
-from ParseTrace import  sumTimeTakenPerTransitionFromConfigurationAndRep
+
+from ParseTrace import  sumTimeTakenPerTransitionFromConfigurationAndRep, setBaseTracesSourceFolder
+
 from pickleFacade import loadObjectFromPickle
 
 
@@ -84,34 +87,52 @@ def getPredictionsForTransitionsOnConfigurationList(testConfigurationsList, regr
         
     
 
+MIN_NUM_ARGUMENTS = 4
 
+def parseRuntimeParemeters(inputParameters):
+    
+    if  len(inputParameters) > MIN_NUM_ARGUMENTS:
 
-if __name__ == "__main__":
-    if   len(sys.argv) > 2:
+        SubjectSystem = inputParameters[1]
+         
+        if SubjectSystem not in MLConstants.lstSubjectSystems:
+             
+            print ("Subject systems must be one of {0}".format(", ".join(MLConstants.lstSubjectSystems)))
+             
+            exit()
+            
+        TraceSourceFolder = inputParameters[2]
+
+        regressorInputFilename = inputParameters[3]
         
-        regressorInputFilename = sys.argv[1]
-        
-        testConfFilename = sys.argv[2]                                
+        testConfFilename = inputParameters[4]                                
         
     else:    
         
         print_help()
         
-        exit(0)
+        exit(0) 
+        
+    return SubjectSystem,   TraceSourceFolder, regressorInputFilename, testConfFilename
+
+
+if __name__ == "__main__":
+
+    SubjectSystem, TraceSourceFolder, regressorInputFilename, testConfFilename = parseRuntimeParemeters(sys.argv)
+    
+    setBaseTracesSourceFolder(TraceSourceFolder)
     
     regressorsArray, testConfigurationsList = loadObjectFromPickle(regressorInputFilename), loadObjectFromPickle(testConfFilename)
 
     transitionToRegressorMapping =  getRegressorToTransitionIdMapping(regressorsArray)
 
-
         
     transitionToConfArrayTimeTaken = {}    
+
     
-    for transitionId  in transitionToRegressorMapping.keys():
-        
+    for transitionId  in transitionToRegressorMapping.keys():        
         transitionToConfArrayTimeTaken[transitionId] = getPredictionsForTransitionsOnConfigurationList(testConfigurationsList, \
                                       regressorsArray, transitionToRegressorMapping)
-
         
     listActualTimes = []
     listPredictedTimes = []
