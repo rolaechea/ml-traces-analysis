@@ -33,13 +33,17 @@ from RegressorsUtils import getBestMethodPerTransition, getXBitmapsForRegression
 
 from TransitionDictionaryManipulations import  extractLinearArrayTimeTakenForSingleTransition
 
-from AutonomooseTraces import getListOfAvailableTransitionsAutonomoose, getSetOfExecutionTimesAutonomoose
+from AutonomooseTraces import getListOfAvailableTransitionsAutonomoose, getSetOfExecutionTimesAutonomoose, generateBitsetForOneConfigurationAutonomoose
 
 
 
-def learnRegressorFromDataset(regressorTypeToLearn, transitionId, YSet, confsList):
+def learnRegressorFromDataset(regressorTypeToLearn, transitionId, YSet, confsList, SubjectSystem):
     """
     Calculates the regressor that CV found to be the best using all the data from training
+    
+    
+    Requries SubjectSystem to decide how to generate bitmamps from configuration id.
+    
     """    
     RegressionType = regressorTypeToLearn[0]
     UseSquares = regressorTypeToLearn[1]
@@ -56,7 +60,13 @@ def learnRegressorFromDataset(regressorTypeToLearn, transitionId, YSet, confsLis
 
     SingleYScaledList = YLocalScaler.transform ([[aY] for aY in SingleYList])
 
-    XBitmaps = getXBitmapsForRegression(confsList, YSet, UseSquares)
+    if SubjectSystem == MLConstants.x264Name:        
+        
+        XBitmaps = getXBitmapsForRegression(confsList, YSet, UseSquares)
+    else:        
+        
+        # autonomoose
+        XBitmaps = getXBitmapsForRegression(confsList, YSet, UseSquares, generateBitsetForOneConfigurationAutonomoose)
     
     if  RegressionType == MLConstants.simpleRegression:
         Regressor = LinearRegression()
@@ -81,7 +91,7 @@ def learnRegressorFromDataset(regressorTypeToLearn, transitionId, YSet, confsLis
     return Regressor, UseSquares, RegressionType == MLConstants.lassoRegression, YLocalScaler, YLocalScaler.mean_,  np.sqrt(YLocalScaler.var_), MAPEYTrain, MAPEStdTrain
 
 
-def calculateTestErrors(Regressor, RegressorUseSquares, RegressorIsLasso,  YLocalScaler, transitionId, YSet, testOrderedConfs):
+def calculateTestErrors(Regressor, RegressorUseSquares, RegressorIsLasso,  YLocalScaler, transitionId, YSet, testOrderedConfs, SubjectSystem):
     """
     given a regressor function, calculates the error of such regressor on the test sets.
     Computes MAE_Test and MAE_Test std. dev across products.
@@ -91,7 +101,17 @@ def calculateTestErrors(Regressor, RegressorUseSquares, RegressorIsLasso,  YLoca
     
     YTestOriginalArray = np.array(SingleYList); YTestOriginalArray.resize((len(SingleYList), 1))
     
-    XBitmaps = getXBitmapsForRegression(testOrderedConfs, YSet, RegressorUseSquares)
+    if SubjectSystem == MLConstants.x264Name:        
+        
+        XBitmaps = getXBitmapsForRegression(testOrderedConfs, YSet, RegressorUseSquares)
+        
+    else:        
+        
+        # autonomoose
+        XBitmaps = getXBitmapsForRegression(testOrderedConfs, YSet, RegressorUseSquares, generateBitsetForOneConfigurationAutonomoose)
+
+    
+    
 
     YTestPredicted = YLocalScaler.inverse_transform(Regressor.predict(XBitmaps))
     
@@ -175,13 +195,13 @@ if __name__ == "__main__":
 
              
         Regressor, RegressorUseSquares, RegressorIsLasso, YLocalScaler, YMeanTrain, YStdTrain, MAPEYTrain, MAPEStdTrain =  learnRegressorFromDataset(bestRegressorPerTransition[transitionId], \
-                                                                                                                                            transitionId, YSetTrain, trainOrderedConfs )    
+                                                                                                                                            transitionId, YSetTrain, trainOrderedConfs, SubjectSystem )    
         if SubjectSystem == MLConstants.x264Name:
              YSetTest = extractLinearArrayTimeTakenForSingleTransition(testDataset, transitionId)
         else:
              YSetTest = getSetOfExecutionTimesAutonomoose(testDataset, transitionId, testOrderedConfs)
 
 
-        YMeanTest,YStdTest, MAPEYTest, MAEYStdDevTest = calculateTestErrors(Regressor, RegressorUseSquares, RegressorIsLasso, YLocalScaler, transitionId, YSetTest, testOrderedConfs)
+        YMeanTest,YStdTest, MAPEYTest, MAEYStdDevTest = calculateTestErrors(Regressor, RegressorUseSquares, RegressorIsLasso, YLocalScaler, transitionId, YSetTest, testOrderedConfs, SubjectSystem)
          
         print("{0},{1},{2},{3},{4},{5},{6},{7},{8}".format(transitionId, YMeanTrain[0], YStdTrain[0], MAPEYTrain, MAPEStdTrain, YMeanTest, YStdTest,  MAPEYTest, MAEYStdDevTest))
