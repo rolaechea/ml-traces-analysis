@@ -102,7 +102,13 @@ def IsRealTransitionForGivenConf(transitionId, ConfigurationId):
             return generateBitsetForOneConfigurationAutonomoose(ConfigurationId)[3] == 1
 
         # depends if we are on waypoints collection or DynamicObjectTracking transition.
-        
+
+
+def getOverallRealTimeForASingleTraceAutonomoose(AutonomooseTrace, ConfigurationId):
+
+    return 0
+
+
 def getSetOfExecutionTimesAutonomoose(transitionData, transitionId, trainingSetConfigurations):
     """
     Inputs: transitionData -- Array of dicts transitions ids to executed Transition Objects of length N.

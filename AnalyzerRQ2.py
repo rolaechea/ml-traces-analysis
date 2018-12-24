@@ -19,7 +19,7 @@ from ParseTrace import  sumTimeTakenPerTransitionFromConfigurationAndRep, setBas
 
 from pickleFacade import loadObjectFromPickle
 
-from AutonomooseTraces import generateBitsetForOneConfigurationAutonomoose
+from AutonomooseTraces import generateBitsetForOneConfigurationAutonomoose, getOverallRealTimeForASingleTraceAutonomoose
 
 
 def print_help():
@@ -49,6 +49,15 @@ def showTimeTaken(configurationId):
     """
     pass
 
+def predictTimeTakenForTrace():
+    """
+    Predicts the time to execute a trace on a specific product based on the execution counts and a set of regressors
+    
+    Returns - Number    
+    """
+    pass
+
+
 
 def getRegressorToTransitionIdMapping(regressorsArray):
     i = 0
@@ -59,12 +68,6 @@ def getRegressorToTransitionIdMapping(regressorsArray):
     return transitionToRegressorMapping
 
 
-def predictTimeTakenForTrace():
-    """
-    Predicts the time to execute a trace on a specific product based on the execution counts and a set of regressors
-    
-    Returns - Number    
-    """
 
 def getPredictionsForTransitionsOnConfigurationList(testConfigurationsList, regressorsArray, transitionToRegressorMapping,  transitionId, ConfigurationBitmapGenerator=generateBitsetForOneConfiguration):
     """
@@ -126,9 +129,7 @@ def analyzeOverallExecutionTimesX264(regressorsArray, testConfigurationsList, tr
     """            
     listActualTimes = []
     listPredictedTimes = []
-    
-    print("Configuration_Id, Actual Execution Time, Predicted Execution Time")
-    
+        
     for aConfId, offsetIndex  in zip(testConfigurationsList, range(0, len(testConfigurationsList))):
     
         timeTameknDict = sumTimeTakenPerTransitionFromConfigurationAndRep(aConfId,  1)
@@ -162,18 +163,22 @@ def analyzeOverallExecutionTimesX264(regressorsArray, testConfigurationsList, tr
 def analyzeOverallExecutionTimesAutonomoose(regressorsArray, testConfigurationsList, transitionToRegressorMapping, transitionToConfArrayTimeTaken):
     """
     Autonomoose all traces are in a single file.
+    
+    Calculate execution time for first trace of  autonomoose
     """
-    allTraces =     loadObjectFromPickle(getSingleFilenameWithAllTraces())
-    
-    print(len(allTraces))
-    
-    print("Configuration_Id, Actual Execution Time, Predicted Execution Time")
-    
+    allTraces =    loadObjectFromPickle(getSingleFilenameWithAllTraces())
+            
+    print (len(testConfigurationsList))
     
     
     for aConfId, offsetIndex  in zip(testConfigurationsList, range(0, len(testConfigurationsList))):
         print("Computing for Configuration {0} with offset Index = {1}".format(aConfId, offsetIndex))
         
+        FirstCurrentConfTraces = allTraces[aConfId][0]
+        
+        actualExecutionTime = getOverallRealTimeForASingleTraceAutonomoose(FirstCurrentConfTraces, aConfId)
+
+        print(actualExecutionTime)
         
 
 if __name__ == "__main__":
@@ -198,6 +203,8 @@ if __name__ == "__main__":
             transitionToConfArrayTimeTaken[transitionId] = getPredictionsForTransitionsOnConfigurationList(testConfigurationsList, \
                                       regressorsArray, transitionToRegressorMapping, transitionId, generateBitsetForOneConfigurationAutonomoose)
             
+    
+    print("Configuration_Id, Actual Execution Time, Predicted Execution Time")
         
     if SubjectSystem == MLConstants.x264Name:
 
