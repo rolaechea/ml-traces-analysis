@@ -15,10 +15,11 @@ import MLConstants
 
 from ConfigurationUtilities import generateBitsetForOneConfiguration, transformFeatureBitmapsToIncludeSquares, mean_absolute_error_and_stdev_eff
 
-from ParseTrace import  sumTimeTakenPerTransitionFromConfigurationAndRep, setBaseTracesSourceFolder
+from ParseTrace import  sumTimeTakenPerTransitionFromConfigurationAndRep, setBaseTracesSourceFolder, getSingleFilenameWithAllTraces
 
 from pickleFacade import loadObjectFromPickle
 
+from AutonomooseTraces import generateBitsetForOneConfigurationAutonomoose
 
 
 def print_help():
@@ -65,18 +66,22 @@ def predictTimeTakenForTrace():
     Returns - Number    
     """
 
-def getPredictionsForTransitionsOnConfigurationList(testConfigurationsList, regressorsArray, transitionToRegressorMapping):
+def getPredictionsForTransitionsOnConfigurationList(testConfigurationsList, regressorsArray, transitionToRegressorMapping,  transitionId, ConfigurationBitmapGenerator=generateBitsetForOneConfiguration):
     """
-    Given a regressor and a a transitions, returns a predictions for the execution time of that transitions.
-    """
-    XBitmaps =  [generateBitsetForOneConfiguration(aConf) for aConf in testConfigurationsList]
-    
+    Given a regressor and a  transition mapping, returns a predictions for the execution time of that transitions.
+    """    
+    XBitmaps =  [ConfigurationBitmapGenerator(aConf) for aConf in testConfigurationsList]
+        
     tmpRegressor =   regressorsArray[transitionToRegressorMapping[transitionId]]
+
+    CurrentRegressor = tmpRegressor.getRegressor() 
     
     if tmpRegressor.getUseSquareX():
         XBitmaps = transformFeatureBitmapsToIncludeSquares(XBitmaps)
-            
-    PredictedTransitionArray =  tmpRegressor.getScaler().inverse_transform(tmpRegressor.getRegressor().predict(XBitmaps))
+    
+    RawPredictions = CurrentRegressor.predict(XBitmaps)
+    
+    PredictedTransitionArray =  tmpRegressor.getScaler().inverse_transform(RawPredictions)
     
     if tmpRegressor.isLasso():
         PredictedTransitionArray = np.array([[y] for y in PredictedTransitionArray]) # Fixing lasso returned vals.
@@ -115,32 +120,17 @@ def parseRuntimeParemeters(inputParameters):
         
     return SubjectSystem,   TraceSourceFolder, regressorInputFilename, testConfFilename
 
-
-if __name__ == "__main__":
-
-    SubjectSystem, TraceSourceFolder, regressorInputFilename, testConfFilename = parseRuntimeParemeters(sys.argv)
-    
-    setBaseTracesSourceFolder(TraceSourceFolder)
-    
-    regressorsArray, testConfigurationsList = loadObjectFromPickle(regressorInputFilename), loadObjectFromPickle(testConfFilename)
-
-    transitionToRegressorMapping =  getRegressorToTransitionIdMapping(regressorsArray)
-
-        
-    transitionToConfArrayTimeTaken = {}    
-
-    
-    for transitionId  in transitionToRegressorMapping.keys():        
-        transitionToConfArrayTimeTaken[transitionId] = getPredictionsForTransitionsOnConfigurationList(testConfigurationsList, \
-                                      regressorsArray, transitionToRegressorMapping)
-        
+def analyzeOverallExecutionTimesX264(regressorsArray, testConfigurationsList, transitionToRegressorMapping, transitionToConfArrayTimeTaken):
+    """
+    Calculate time taken for each execution in confs that are part of test set.
+    """            
     listActualTimes = []
     listPredictedTimes = []
     
     print("Configuration_Id, Actual Execution Time, Predicted Execution Time")
     
     for aConfId, offsetIndex  in zip(testConfigurationsList, range(0, len(testConfigurationsList))):
-
+    
         timeTameknDict = sumTimeTakenPerTransitionFromConfigurationAndRep(aConfId,  1)
         
         timeTakenByTraceAddition = sum([timeTameknDict[x][MLConstants.tupleTimeOffset] for x in timeTameknDict.keys()])
@@ -151,12 +141,12 @@ if __name__ == "__main__":
             if foundTransitionId in transitionToRegressorMapping.keys():
                 predictedTimeTaken = predictedTimeTaken + (transitionToConfArrayTimeTaken[foundTransitionId][offsetIndex]*timeTameknDict[foundTransitionId][MLConstants.tupleCountOffset])
         
-
+    
                 
         print("{0},{1},{2}".format(aConfId, timeTakenByTraceAddition, predictedTimeTaken[0]))
-
+    
         listActualTimes.append(timeTakenByTraceAddition)
-
+    
         listPredictedTimes.append(predictedTimeTaken)
     
     npActualTimes = np.array([np.array([x]) for x in listActualTimes])
@@ -168,4 +158,52 @@ if __name__ == "__main__":
     
     print("{0},{1}".format(meanMAE, stdMAE))
 
+
+def analyzeOverallExecutionTimesAutonomoose(regressorsArray, testConfigurationsList, transitionToRegressorMapping, transitionToConfArrayTimeTaken):
+    """
+    Autonomoose all traces are in a single file.
+    """
+    allTraces =     loadObjectFromPickle(getSingleFilenameWithAllTraces())
+    
+    print(len(allTraces))
+    
+    print("Configuration_Id, Actual Execution Time, Predicted Execution Time")
+    
+    
+    
+    for aConfId, offsetIndex  in zip(testConfigurationsList, range(0, len(testConfigurationsList))):
+        print("Computing for Configuration {0} with offset Index = {1}".format(aConfId, offsetIndex))
+        
+        
+
+if __name__ == "__main__":
+
+    SubjectSystem, TraceSourceFolder, regressorInputFilename, testConfFilename = parseRuntimeParemeters(sys.argv)
+    
+    setBaseTracesSourceFolder(TraceSourceFolder)
+    
+    regressorsArray, testConfigurationsList = loadObjectFromPickle(regressorInputFilename), loadObjectFromPickle(testConfFilename)
+
+    transitionToRegressorMapping =  getRegressorToTransitionIdMapping(regressorsArray)
+
+    transitionToConfArrayTimeTaken = {}
+
+   
+    
+    for transitionId  in transitionToRegressorMapping.keys():      
+        if SubjectSystem == MLConstants.x264Name:
+            transitionToConfArrayTimeTaken[transitionId] = getPredictionsForTransitionsOnConfigurationList(testConfigurationsList, \
+                                      regressorsArray, transitionToRegressorMapping, transitionId)
+        else:
+            transitionToConfArrayTimeTaken[transitionId] = getPredictionsForTransitionsOnConfigurationList(testConfigurationsList, \
+                                      regressorsArray, transitionToRegressorMapping, transitionId, generateBitsetForOneConfigurationAutonomoose)
+            
+        
+    if SubjectSystem == MLConstants.x264Name:
+
+        analyzeOverallExecutionTimesX264(regressorsArray, testConfigurationsList, transitionToRegressorMapping, transitionToConfArrayTimeTaken)
+
+    else:
+        
+        analyzeOverallExecutionTimesAutonomoose(regressorsArray, testConfigurationsList, transitionToRegressorMapping, transitionToConfArrayTimeTaken)
                    
