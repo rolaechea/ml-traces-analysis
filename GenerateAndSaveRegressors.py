@@ -23,11 +23,13 @@ from RegressorsUtils import getXBitmapsForRegression
 
 import MLConstants
 
-from AutonomooseTraces import getListOfAvailableTransitionsAutonomoose, getSetOfExecutionTimesAutonomoose
+from AutonomooseTraces import getListOfAvailableTransitionsAutonomoose, getSetOfExecutionTimesAutonomoose, generateBitsetForOneConfigurationAutonomoose
 
-def FitTrainDataFroRegressor(theRegressor, trainOrderedConfs, YSet):
+def FitTrainDataFroRegressor(theRegressor, trainOrderedConfs, YSet, SubjectSystem):
     """
-    Given a regressor wrapper (already initialized), fit the data (including storing  the scaler in the  regressor)
+    Given a regressor wrapper (already initialized), fit the data (including storing  the scaler in the  regressor)    
+ 
+    Requires subject system to determine how to generate bitmamps from Configuration id.
     """    
     SingleYList = list(itertools.chain.from_iterable(YSet))
 
@@ -37,8 +39,13 @@ def FitTrainDataFroRegressor(theRegressor, trainOrderedConfs, YSet):
 
     SingleYScaledList = YLocalScaler.transform ([[aY] for aY in SingleYList])
 
-    XBitmaps = getXBitmapsForRegression(trainOrderedConfs, YSet, theRegressor.getUseSquareX())
-    
+    if SubjectSystem == MLConstants.x264Name:
+        # X264
+        XBitmaps = getXBitmapsForRegression(trainOrderedConfs, YSet, theRegressor.getUseSquareX())
+    else:
+        # Autonomoose
+        XBitmaps = getXBitmapsForRegression(trainOrderedConfs, YSet, theRegressor.getUseSquareX(), generateBitsetForOneConfigurationAutonomoose)
+        
     theRegressor.setScaler(YLocalScaler)
     
     theRegressor.getRegressor().fit(XBitmaps, SingleYScaledList)
@@ -114,7 +121,7 @@ if __name__ == "__main__":
              
             YSet = getSetOfExecutionTimesAutonomoose(trainDataset, newRegressor.getTransitionId(), trainOrderedConfs)
              
-        FitTrainDataFroRegressor(newRegressor, trainOrderedConfs, YSet)
+        FitTrainDataFroRegressor(newRegressor, trainOrderedConfs, YSet, SubjectSystem)
          
         RegressorList.append(newRegressor)
     

@@ -61,12 +61,12 @@ class TransitionRegressorWrappper:
 
 
 
-def getXBitmapsForRegression(confsList, YSet, UseSquares):        
+def getXBitmapsForRegression(confsList, YSet, UseSquares, XBitmapGenerator=generateBitsetForOneConfiguration):        
     """
     Generate array of bitmamps of confs given and repeat them according to number of Y's in each element of YSet.
     Precondition: |YBag| == |YSet|
     """
-    XBitmaps = [generateBitsetForOneConfiguration(confId) for confId in confsList]
+    XBitmaps = [XBitmapGenerator(confId) for confId in confsList]
 
     if UseSquares:
         XBitmaps = transformFeatureBitmapsToIncludeSquares(XBitmaps)
