@@ -105,8 +105,21 @@ def IsRealTransitionForGivenConf(transitionId, ConfigurationId):
 
 
 def getOverallRealTimeForASingleTraceAutonomoose(AutonomooseTrace, ConfigurationId):
+    """
+    Iterates through all non dummy transitions and adds up execution times
+    
+    Input: A autonomoose Execution Trace.
+    """
+    tmpTransList = AutonomooseTrace.getTransitionList()
 
-    return 0
+    
+    AccumulatedTime = 0.0
+    for anAutonomooseTransition in tmpTransList:
+        if IsRealTransitionForGivenConf(anAutonomooseTransition.getTransitionId(),ConfigurationId):
+            AccumulatedTime = AccumulatedTime + anAutonomooseTransition.getTimeTaken()
+#    for aTrans in tmpTransList:
+#        print ( dir(AutonomooseTrace))
+    return AccumulatedTime
 
 
 def getSetOfExecutionTimesAutonomoose(transitionData, transitionId, trainingSetConfigurations):
@@ -182,6 +195,21 @@ class ExecutionTraceAutonomoose(ExecutionTrace):
         
         self.setSize(len(self.lstExecutedTransitions))
         
+
+    def getPerTransitionCounts(self):
+        """
+        Returns a dictionary of number of times each transition has been executed on current trace.
+        Only includes -- real transitions -- (non dummy)
+        """
+        transitionsCounts = {}
+        
+        for aTransition in self.getTransitionList():
+            if IsRealTransitionForGivenConf(aTransition.getTransitionId(), self.getConfigurationId()):                
+                if aTransition.getTransitionId() in transitionsCounts.keys():
+                    transitionsCounts[aTransition.getTransitionId()] = transitionsCounts[aTransition.getTransitionId()] + 1.0
+                else:
+                    transitionsCounts[aTransition.getTransitionId()] = 1.0
+        return transitionsCounts
 
     def setStartSystem(self, indexId):
         """

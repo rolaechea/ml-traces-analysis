@@ -166,20 +166,59 @@ def analyzeOverallExecutionTimesAutonomoose(regressorsArray, testConfigurationsL
     
     Calculate execution time for first trace of  autonomoose
     """
+    listActualTimes = []
+    listPredictedTimes = []
+    
     allTraces =    loadObjectFromPickle(getSingleFilenameWithAllTraces())
             
-    print (len(testConfigurationsList))
+#    print (len(testConfigurationsList))
     
     
     for aConfId, offsetIndex  in zip(testConfigurationsList, range(0, len(testConfigurationsList))):
-        print("Computing for Configuration {0} with offset Index = {1}".format(aConfId, offsetIndex))
+        #print("Computing for Configuration {0} with offset Index = {1}".format(aConfId, offsetIndex))
         
-        FirstCurrentConfTraces = allTraces[aConfId][0]
-        
-        actualExecutionTime = getOverallRealTimeForASingleTraceAutonomoose(FirstCurrentConfTraces, aConfId)
+        for repetitionId in range(0, 10):
+            CurrentExecutionTrace = allTraces[aConfId][repetitionId]
+            
+            actualExecutionTime = getOverallRealTimeForASingleTraceAutonomoose(CurrentExecutionTrace, aConfId)
+    
 
-        print(actualExecutionTime)
         
+            transitionsCounts = CurrentExecutionTrace.getPerTransitionCounts()
+            
+            #print(transitionsCounts)
+  
+            predictedTimeTaken = 0.0
+            
+            for aTransitionId in transitionsCounts.keys():
+                predictedTimeTaken = predictedTimeTaken + transitionsCounts[aTransitionId] * transitionToConfArrayTimeTaken[aTransitionId][offsetIndex]
+            
+            if not (type(predictedTimeTaken) == float):
+                print("{0},{1},{2}".format(aConfId, actualExecutionTime, predictedTimeTaken[0]))
+            else:
+                
+                print("{0},{1},{2}".format(aConfId, actualExecutionTime, predictedTimeTaken))                
+
+            listActualTimes.append(actualExecutionTime)
+        
+            listPredictedTimes.append(predictedTimeTaken)            
+
+    npActualTimes = np.array([np.array([x]) for x in listActualTimes])
+    npPredictedTimes = np.array(listPredictedTimes)
+        
+    meanMAE, stdMAE = mean_absolute_error_and_stdev_eff(npActualTimes, npPredictedTimes)
+ 
+
+    print("Mean_MAE,MAE_STDEV")
+    
+    if meanMAE.shape==(1,):
+        print("{0},{1}".format(meanMAE[0], stdMAE[0])) 
+    else:
+        print("{0},{1}".format(meanMAE, stdMAE))    
+    
+    
+
+    
 
 if __name__ == "__main__":
 
