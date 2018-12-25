@@ -132,7 +132,7 @@ def analyzeOverallExecutionTimesX264(regressorsArray, testConfigurationsList, tr
         
     for aConfId, offsetIndex  in zip(testConfigurationsList, range(0, len(testConfigurationsList))):
     
-        for repetitionId in range(0, 10):
+        for repetitionId in range(1, 11):
             timeTameknDict = sumTimeTakenPerTransitionFromConfigurationAndRep(aConfId,  repetitionId)
             
             timeTakenByTraceAddition = sum([timeTameknDict[x][MLConstants.tupleTimeOffset] for x in timeTameknDict.keys()])
