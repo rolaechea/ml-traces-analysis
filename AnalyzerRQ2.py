@@ -132,23 +132,24 @@ def analyzeOverallExecutionTimesX264(regressorsArray, testConfigurationsList, tr
         
     for aConfId, offsetIndex  in zip(testConfigurationsList, range(0, len(testConfigurationsList))):
     
-        timeTameknDict = sumTimeTakenPerTransitionFromConfigurationAndRep(aConfId,  1)
-        
-        timeTakenByTraceAddition = sum([timeTameknDict[x][MLConstants.tupleTimeOffset] for x in timeTameknDict.keys()])
-        
-        predictedTimeTaken = 0
-        
-        for foundTransitionId in timeTameknDict.keys():
-            if foundTransitionId in transitionToRegressorMapping.keys():
-                predictedTimeTaken = predictedTimeTaken + (transitionToConfArrayTimeTaken[foundTransitionId][offsetIndex]*timeTameknDict[foundTransitionId][MLConstants.tupleCountOffset])
+        for repetitionId in range(0, 10):
+            timeTameknDict = sumTimeTakenPerTransitionFromConfigurationAndRep(aConfId,  1)
+            
+            timeTakenByTraceAddition = sum([timeTameknDict[x][MLConstants.tupleTimeOffset] for x in timeTameknDict.keys()])
+            
+            predictedTimeTaken = 0
+            
+            for foundTransitionId in timeTameknDict.keys():
+                if foundTransitionId in transitionToRegressorMapping.keys():
+                    predictedTimeTaken = predictedTimeTaken + (transitionToConfArrayTimeTaken[foundTransitionId][offsetIndex]*timeTameknDict[foundTransitionId][MLConstants.tupleCountOffset])
         
     
                 
-        print("{0},{1},{2}".format(aConfId, timeTakenByTraceAddition, predictedTimeTaken[0]))
+                print("{0},{1},{2}".format(aConfId, timeTakenByTraceAddition, predictedTimeTaken[0]))
     
-        listActualTimes.append(timeTakenByTraceAddition)
+                listActualTimes.append(timeTakenByTraceAddition)
     
-        listPredictedTimes.append(predictedTimeTaken)
+                listPredictedTimes.append(predictedTimeTaken)
     
     npActualTimes = np.array([np.array([x]) for x in listActualTimes])
     npPredictedTimes = np.array(listPredictedTimes)
