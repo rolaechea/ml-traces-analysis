@@ -60,6 +60,10 @@ def predictTimeTakenForTrace():
 
 
 def getRegressorToTransitionIdMapping(regressorsArray):
+    """
+    Creates and returns a dictionary mapping a transition id (int) to its respective regressor object index.
+    Input: a list or array of regressors
+    """
     i = 0
     transitionToRegressorMapping = {}
     for aRegressor in regressorsArray:
@@ -71,7 +75,8 @@ def getRegressorToTransitionIdMapping(regressorsArray):
 
 def getPredictionsForTransitionsOnConfigurationList(testConfigurationsList, regressorsArray, transitionToRegressorMapping,  transitionId, ConfigurationBitmapGenerator=generateBitsetForOneConfiguration):
     """
-    Given a regressor and a  transition mapping, returns a predictions for the execution time of that transitions.
+    Returns predictions for the execution time of a transition.
+    Input: A regressor Array, a  transition to regressor mapping,  a transition id, and a configuratino List.
     """    
     XBitmaps =  [ConfigurationBitmapGenerator(aConf) for aConf in testConfigurationsList]
         
@@ -93,11 +98,19 @@ def getPredictionsForTransitionsOnConfigurationList(testConfigurationsList, regr
         
 
         
-    
 
 MIN_NUM_ARGUMENTS = 4
 
 def parseRuntimeParemeters(inputParameters):
+    """
+    Parse the following parameters:
+        Subject System (x264 or Autonomoose)
+        Trace sources folders
+        regressor filename
+        test set filename
+    
+    Returns parsed values as a tuple.    
+    """
     
     if  len(inputParameters) > MIN_NUM_ARGUMENTS:
 
@@ -252,4 +265,4 @@ if __name__ == "__main__":
     else:
         
         analyzeOverallExecutionTimesAutonomoose(regressorsArray, testConfigurationsList, transitionToRegressorMapping, transitionToConfArrayTimeTaken)
-                   
+        

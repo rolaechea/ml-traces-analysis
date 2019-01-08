@@ -2,6 +2,11 @@
 
 
 if __name__ == "__main__":
+    """
+    For each transition in X264, compute its  normalized mean average error, and its normalized mean average error standard deviation.
+    
+    Requires CSV files akiyo.csv, container.csv, and news.csv in X264Results folder
+    """
     
     csvFiles = ["x264Results/akiyo.csv",      "x264Results/container.csv",  "x264Results/news.csv"]
 
