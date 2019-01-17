@@ -5,13 +5,14 @@ Created on Wed Jan  9 17:33:15 2019
 
 @author: rafaelolaechea
 """
+import math
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
 from FeatureWrapper import FeatureWrapper
 from LearningRound import LearningRound
 from Interaction import Interaction
-
+import mlsettings 
 
 
 
@@ -507,51 +508,121 @@ class FeatureSubsetSelection(object):
         return False
 
 
-    def computeLearningError(self, minimalErrorModel):
+    def computeLearningError(self, currentModel):
         """
-        TODO
+        Computes the error of the current model for all configurations in the learning set
+                
+        Parameters
+        ----------
+        currentModel: List of FeatureWrapper Objects        
+        The features that have been fitted so far 
+        
+        Returns 
+        -------
+        The mean error of the validation set. It depends on the parameters in ML settings which loss function is used. Also the relative error.
         """        
-        pass
+        return self.computeError(currentModel, self.validationSet)
         #                                   computeLearningError(minimalErrorModel, out relativeErrorTrain),
 
 
-    def computeValidationError(self, minimalErrorModel):
+    def computeValidationError(self, currentModel):
         """
-        TODO
-        """
-        pass
-        #                                   computeValidationError(minimalErrorModel, out relativeErrorEval), 
+        Computes the error of the current model for all configurations in the validation set.
+        
+        Parameters
+        ----------
+        currentModel: List of FeatureWrapper Objects        
+        The features that have been fitted so far 
 
-    def computeModelError(self):
+        Returns
+        --------
+
+        A tuple consisting of the mean error of the validation set and the relative error. It depends on the parameters in ML settings which loss function is used        
         """
-        Computes the error of a specific model.
+        return self.computeError(currentModel, self.validationSet)
+
+
+    def computeModelError(self, currentModel):
+        """
+        Computes the general error for the current model. It depends on the parameters of ML settings which loss function and whether cross validation is used.
+        
+        Parameters
+        ----------
+        currentModel : List of feature objects.
+               
+        Returns
+        -------
+        The error depending on the configured loss function (e.g., relative, least squares, absolute), and the relative error.         
+        """
+        if self.MLsettings.crossValidation:
+            return self.computeValidationError(currentModel)
+        else:
+        
+            tmpMainErrorLearning, tmpRelativeErrorLearning = self.computeLearningError(currentModel)
+            
+            tmpMainErrorValidation, tmpRelativeErrorValidation = self.computeLearningError(currentModel)
+
+            return ( ( tmpMainErrorLearning + tmpMainErrorValidation ) / 2,  ( tmpMainErrorValidation + tmpRelativeErrorValidation ) / 2)
+
+        
+    def computeError(self, currentModel, configs):
+        """        
+        Computes the error for the given configuration set based on the given model
+        
+        It queries the ML settings to used the configured loss function and uses stored measured values.
+        
+        Parameters
+        ----------
+        currentModel : List of features.
+        configs: List of Configurations
         
         Returns
         -------
-        
-        TODO
+        Tuple of error and relativerror. Error is based on the configured loss function.
         """
-        pass     
+        error_sum = 0
+        relativeError = 0
+        skips = 0
         
-    def computeError(self, currentModel, configs):
-        """
-        TODO
-        /// <summary>
-        /// This methods computes the error for the given configuration based on the given model. 
-        // It queries the ML settings to used the configured loss function.
-        /// As the actual value, it uses the non-functional property stored in the global model -- i.e. true NFP. 
-        // If this is not available in the configuration, it uses the default NFP of the configuration.
-        /// </summary>
-        /// <param name="currentModel">The model containing all fitted features.</param>
-        /// <param name="configs">The configuration for which the error should be computed. 
-                    It contains also the actually measured value.</param>
-        /// <returns>The error depending on the configured loss function (e.g., relative, least squares, absolute).</returns>
-      
-        public double computeError(List<Feature> currentModel, List<Configuration> configs, out double relativeError)        
+        for eachConfiguration in configs:
+            estimatedValue = self.estimate(currentModel, eachConfiguration)
+            
+            realValue = eachConfiguration.GetNFPValue()
+            
+            if (realValue < 1):
+                # Ignore cases where real value is close to zero.
+                skips = skips + 1
+                continue
+            else:
+                    er =  abs(100 - ((estimatedValue * 100) / realValue))
+                    relativeError = relativeError + er
+                    
+                # Other cases.
+            
+            error = 0
+            
+            if self.ML_Settings.LossFunction == mlsettings.RELATIVE:
+                if (realValue < 1):
+                    # following sven
+                    error = abs(((2 * (realValue - estimatedValue) / (realValue + estimatedValue)) - 1) * 100)
+                else:
+                    error = abs(100 - ((estimatedValue * 100) / realValue))
+                    
+            elif  self.ML_Settings.LossFunction == mlsettings.LEASTSQUARES:
+                
+                error = math.pow(realValue - estimatedValue, 2)                
+                
+            elif self.ML_Settings.LossFunction == mlsettings.ABSOLUTE:
+
+                error = abs(realValue - estimatedValue)
+                
+   
+            error_sum = error_sum + error
+            
+        relativeError = relativeError / (len(configs) - skips)
         
-        """
-        pass
-    
+        return ( (error_sum / (len(configs) - skips)), relativeError)
+
     
     
     def createSingleFeatureValuesList(self, theFeature):
