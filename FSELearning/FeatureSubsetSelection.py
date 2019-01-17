@@ -85,7 +85,7 @@ class FeatureSubsetSelection(object):
             
         Requires learningHistory to be an iterable of Learning Rounds.
         
-        Mostly done, but testing is pending.
+        Cleared Learning with updating Influence model.
         """
         self.infModel.clearBinaryOptionsInfluence()
         self.infModel.clearInteractionInfluence()
@@ -98,8 +98,6 @@ class FeatureSubsetSelection(object):
             if LRound.validationError <  lowestError:
                 lowestError = LRound.validationError
                 bestRound = LRound
-
-
         
         #  Update dictionaries InteractionInfluence and BinaryOptionsInfluence in Influence model.
         for f in bestRound.FeatureSet:
@@ -625,10 +623,45 @@ class FeatureSubsetSelection(object):
 
             i = i - 1
    
-    def performBackwardStep(self):
+    def performBackwardStep(self, current):
         """
-        performBackwardStep
-        TODO
-        """
-        pass
+        Removes already learned features from the model if they have only a small impact on the prediction accuracy. 
         
+        This should help keeping the model simple, reducing the danger of overfitting, and leaving local optima.
+        
+        Parameters
+        ----------
+        current: LearningRound
+        The current learning round that we will attemp to simplify.
+        
+        Returns
+        -------
+        A new model that might be smaller than the original one and might have a slightly worse prediction accuracy.        
+        """
+        if (current.roundNum < 3 or len(current.FeatureSet) < 2):
+            return current
+        
+        abort = False
+        tmpFeatureSet = self.copyCombination(current.FeatureSet);
+        while(not abort):
+                roundError = float("inf")
+                toRemove = None
+        
+                for deletionCandidate in tmpFeatureSet:
+                    tempSet = self.copyCombination(tmpFeatureSet);
+                    tempSet.remove(deletionCandidate)
+                    
+                    error, relativeError = self.computeModelError(tempSet)
+                    
+                    if ( (error - self.MLsettings.backwardErrorDelta) < current.validationError and error < roundError):
+                        roundError = error
+                        toRemove = deletionCandidate                        
+                    
+                if not (toRemove == None):
+                    tmpFeatureSet.remove(toRemove)
+                    
+                if len(tmpFeatureSet)<= 2:
+                    abort = True
+                        
+        current.FeatureSet = tmpFeatureSet
+        return current
