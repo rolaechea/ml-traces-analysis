@@ -34,6 +34,7 @@ class VariabilityModel(object):
         ----------
         The option to be added to the variability model.
         """
+        pass
         
     def initOptions(self):
         """

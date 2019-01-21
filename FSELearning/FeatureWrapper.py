@@ -24,22 +24,17 @@ class FeatureWrapper(InfluenceFunction):
         
         self.parent = None
         self.name = name
-        self.constant = 0
+        self.Constant = 0
         
+#        self.XOffset = -1
+        
+    def evalOnConfiguration(self, aConfiguration):
+        pass
+    
     def isRoot(self):
-        pass
+        return self.name == "root"    
     
-    def setWeightConstant(self, newConstantValue):
-        pass
-    
-    def getWeightConstant(self):
-        pass
-    
-    def isBasicFeature(self):
-        return self.isBasic 
-    
-    def getXOffset(self):
-        return self.XOffset
+
     
     def getParentFeature(self):
         return self.parent
@@ -63,6 +58,20 @@ class FeatureWrapper(InfluenceFunction):
             Counts how many times each --part-- is present in each --Feature--.
         """
         pass
+   
+    def compare(self):
+        pass
+    
+    def GetHashCode(self):
+        pass
+    
+    def initHashCode(self):
+        pass
+    
+    def getVariabilityModel(self):
+        return self.VariabilityModel
+    
+
 """
             Feature other = (Feature) obj;
 
@@ -109,15 +118,14 @@ class FeatureWrapper(InfluenceFunction):
             if (thisParts.Count > 0)
                 return false;
 
-"""    
-    def compare(self):
-        pass
+""" 
+
+
+#    def isBasicFeature(self):
+#        return self.isBasic 
     
-    def GetHashCode(self):
-        pass
-    
-    def initHashCode(self):
-        pass
-    
-    def getVariabilityModel(self):
-        return self.VariabilityModel
+#    def getXOffset(self):
+#        """
+#        Used when mapping to 'original features'
+#        """
+#        return self.XOffset

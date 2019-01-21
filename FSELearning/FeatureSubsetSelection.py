@@ -507,6 +507,26 @@ class FeatureSubsetSelection(object):
                 return True
         return False
 
+    def estimate(self, currentModel, aConfiguration):
+        """
+        Creates an estimate for the given configuration based on the given model.
+        
+        Parameters
+        ----------
+        currentModel : list of Features
+        aConfiguration: a specific configuration
+        
+        Returns
+        -------
+        The estimate.        
+        """
+        prediction = 0
+        for i in range(0, len(currentModel)):
+            if(currentModel[i].validConfig(aConfiguration)):
+                prediction += currentModel[i].evalOnConfiguration(aConfiguration) * currentModel[i].Constant
+    
+        return prediction
+    
 
     def computeLearningError(self, currentModel):
         """
