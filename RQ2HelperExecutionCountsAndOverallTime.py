@@ -76,6 +76,8 @@ def summarizeTracesX264(jsonOutput):
     """
     allConfigurationsIds = range(0, 2304)
     
+    dctAllTracesExecutionTimes = {}
+    
     for aConfId in allConfigurationsIds:
         for repetitionId in range(1, 11):
 
@@ -83,8 +85,10 @@ def summarizeTracesX264(jsonOutput):
             
             timeTakenByTraceAddition = sum([timeTameknDict[x][MLConstants.tupleTimeOffset] for x in timeTameknDict.keys()])
             
-            print(timeTakenByTraceAddition)
-
+            dctAllTracesExecutionTimes[(aConfId, repetitionId)] = timeTameknDict
+#            print(timeTakenByTraceAddition)
+    print (dctAllTracesExecutionTimes)
+    
 if __name__ == "__main__":
     SubjectSystem, TraceSourceFolder, jsonOutput  = parseRuntimeParemeters(sys.argv)    
 
