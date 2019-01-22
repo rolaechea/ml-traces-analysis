@@ -16,7 +16,9 @@ import sys
 
 
 import MLConstants
+import pickleFacade
 from ParseTrace import  setBaseTracesSourceFolder, sumTimeTakenPerTransitionFromConfigurationAndRep
+
 
 def print_help():
     """
@@ -28,9 +30,10 @@ def print_help():
     print("python RQ2HelperExecutionCountsAndOverralTime.py SubjecySystem traceSourceFolder JsonOuptutFilename")
     print("SubjecySystem either autonomoose or x264")
     print("traceSourceFolder source folder where executions are stored")
-    print("Filename where to store json summary of execution traces.")
-
-MIN_NUM_ARGUMENTS = 3
+    print("Filename where to store pickle summary of execution traces (overal time summary)")
+    print("Filename where to store pickle summary of execution traces (per-transition count (0) and time (1)  summary)")
+    
+MIN_NUM_ARGUMENTS = 4
 
 def parseRuntimeParemeters(inputParameters):
     """
@@ -58,23 +61,28 @@ def parseRuntimeParemeters(inputParameters):
 
         pklOuptputFilename = inputParameters[3]
         
+        pklOuptputPerTransitionFilename = inputParameters[4]        
     else:
         
         print_help()
         exit(0)
-    return SubjectSystem, TraceSourceFolder, pklOuptputFilename
+    return SubjectSystem, TraceSourceFolder, pklOuptputFilename, pklOuptputPerTransitionFilename
 
 
-def summarizeTracesX264(pklOutput):
+def summarizeTracesX264(pklOuptputFilename, pklOuptputPerTransitionFilename):
     """
     Read all traces from the source folder (already set) and summarize their overall execution time, # of counts per transition, and total time per transition.
 
+
+    Creates two PKL Files. First one is dictionary mapping confId, repetitionId to overal execution time. 
+    Second one is Chained Dictionary mapping Conf -- > rep --> transitionId --> (Count, TimeTakenTotal)
+    
     Parameters
     ----------
     pklOutput : string
     Filename where to store results.
     """
-    allConfigurationsIds = range(0, 2)
+    allConfigurationsIds = range(0, 2304)
     
     dctAllTracesExecutionTimes = {}
     dctConfTodctRepTodctTransitionToTimes = {}
@@ -82,7 +90,7 @@ def summarizeTracesX264(pklOutput):
     for aConfId in allConfigurationsIds:
         print("Summarizing Configuration {0}".format(aConfId))
         dctConfTodctRepTodctTransitionToTimes[aConfId] = {}
-        for repetitionId in range(1, 5):
+        for repetitionId in range(1, 11):
 
             dctTransitionToTimeTamekn = sumTimeTakenPerTransitionFromConfigurationAndRep(aConfId,  repetitionId)
             
@@ -93,18 +101,21 @@ def summarizeTracesX264(pklOutput):
             dctConfTodctRepTodctTransitionToTimes[aConfId][repetitionId] = dctTransitionToTimeTamekn
 #            print(timeTakenByTraceAddition)
     
-    print (dctAllTracesExecutionTimes.keys())
-    print (dctConfTodctRepTodctTransitionToTimes.keys())
+#    print (dctAllTracesExecutionTimes.keys())
+#    print (dctConfTodctRepTodctTransitionToTimes.keys())
+    
+    pickleFacade.saveObjectToPickleFile(pklOuptputFilename, dctAllTracesExecutionTimes)
+    pickleFacade.saveObjectToPickleFile(pklOuptputPerTransitionFilename, dctConfTodctRepTodctTransitionToTimes)
     
 if __name__ == "__main__":
-    SubjectSystem, TraceSourceFolder, pklOuptputFilename  = parseRuntimeParemeters(sys.argv)    
+    SubjectSystem, TraceSourceFolder, pklOuptputFilename, pklOuptputPerTransitionFilename  = parseRuntimeParemeters(sys.argv)    
 
     setBaseTracesSourceFolder(TraceSourceFolder)
 
 
     if SubjectSystem == MLConstants.x264Name:
 
-        summarizeTracesX264(pklOuptputFilename)
+        summarizeTracesX264(pklOuptputFilename, pklOuptputPerTransitionFilename)
 
     else:
         
