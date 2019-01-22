@@ -39,7 +39,7 @@ def parseRuntimeParemeters(inputParameters):
     The following parameters are suported:
         Subject System (x264 or Autonomoose).
         Trace sources folder.        
-        Output Destination of json file.
+        Output Destination of pklOutput file.
 
     Returns
     ------    
@@ -56,48 +56,55 @@ def parseRuntimeParemeters(inputParameters):
             
         TraceSourceFolder = inputParameters[2]
 
-        jsonOuptputFilename = inputParameters[3]
+        pklOuptputFilename = inputParameters[3]
         
     else:
         
         print_help()
         exit(0)
-    return SubjectSystem, TraceSourceFolder, jsonOuptputFilename
+    return SubjectSystem, TraceSourceFolder, pklOuptputFilename
 
 
-def summarizeTracesX264(jsonOutput):
+def summarizeTracesX264(pklOutput):
     """
     Read all traces from the source folder (already set) and summarize their overall execution time, # of counts per transition, and total time per transition.
 
     Parameters
     ----------
-    jsonOutput : string
+    pklOutput : string
     Filename where to store results.
     """
-    allConfigurationsIds = range(0, 2304)
+    allConfigurationsIds = range(0, 2)
     
     dctAllTracesExecutionTimes = {}
-    
-    for aConfId in allConfigurationsIds:
-        for repetitionId in range(1, 11):
+    dctConfTodctRepTodctTransitionToTimes = {}
 
-            timeTameknDict = sumTimeTakenPerTransitionFromConfigurationAndRep(aConfId,  repetitionId)
+    for aConfId in allConfigurationsIds:
+        print("Summarizing Configuration {0}".format(aConfId))
+        dctConfTodctRepTodctTransitionToTimes[aConfId] = {}
+        for repetitionId in range(1, 5):
+
+            dctTransitionToTimeTamekn = sumTimeTakenPerTransitionFromConfigurationAndRep(aConfId,  repetitionId)
             
-            timeTakenByTraceAddition = sum([timeTameknDict[x][MLConstants.tupleTimeOffset] for x in timeTameknDict.keys()])
+            timeTakenByTraceAddition = sum([dctTransitionToTimeTamekn[x][MLConstants.tupleTimeOffset] for x in dctTransitionToTimeTamekn.keys()])
             
-            dctAllTracesExecutionTimes[(aConfId, repetitionId)] = timeTameknDict
+            dctAllTracesExecutionTimes[(aConfId, repetitionId)] = timeTakenByTraceAddition
+             
+            dctConfTodctRepTodctTransitionToTimes[aConfId][repetitionId] = dctTransitionToTimeTamekn
 #            print(timeTakenByTraceAddition)
-    print (dctAllTracesExecutionTimes)
+    
+    print (dctAllTracesExecutionTimes.keys())
+    print (dctConfTodctRepTodctTransitionToTimes.keys())
     
 if __name__ == "__main__":
-    SubjectSystem, TraceSourceFolder, jsonOutput  = parseRuntimeParemeters(sys.argv)    
+    SubjectSystem, TraceSourceFolder, pklOuptputFilename  = parseRuntimeParemeters(sys.argv)    
 
     setBaseTracesSourceFolder(TraceSourceFolder)
 
 
     if SubjectSystem == MLConstants.x264Name:
 
-        summarizeTracesX264(jsonOutput)
+        summarizeTracesX264(pklOuptputFilename)
 
     else:
         
