@@ -13,8 +13,7 @@ class InfluenceModel(object):
     
     BinaryOptionsInfluence - Dictionary -- Maps BoolOptions to a featureWrapper object.
     
-    interactionInfluence -- Dictionary -- Maps Interaction to a featureWrapper object
-    
+    interactionInfluence -- Dictionary -- Maps Interaction to a featureWrapper object    
     """    
     def __init__(self, vm):
         self.vm = vm
@@ -27,6 +26,7 @@ class InfluenceModel(object):
         
         To determine the value all the influences of all configuration options and interactions are considered.
         
+        TODO
         Parameters
         ----------
         Configuration : Configuration

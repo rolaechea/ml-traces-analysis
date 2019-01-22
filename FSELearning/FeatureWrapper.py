@@ -15,18 +15,22 @@ class FeatureWrapper(InfluenceFunction):
     Notes
     -----   
         Inherits from InfluenceFunction ,  --- IEquatable<Feature>, IComparer<Feature>.        
-        Verified that Sven's   Constructor public Feature(Feature original, Feature toAdd, VariabilityModel vm) is dead code.
+
+        Verified that Sven's  Constructor public Feature(Feature original, Feature toAdd, VariabilityModel vm) is dead code.
+        Verified that related member variable hashcode and method initHashCode are dead code.
     
         Note that member variable wellFormedExpression is inherited from Influence Function
+        
+    FeatureWrapper shall have a member well formed Expression (TODO)
+    
         
     """    
     def __init__(self, name, VariabilityModel):
         
-        self.parent = None
+#        self.parent = None
         self.name = name
-        self.Constant = 0
-        
-#        self.XOffset = -1
+        self.Constant = 0         
+        super(FeatureWrapper, self).__init__(self.name, VariabilityModel)
         
     def evalOnConfiguration(self, aConfiguration):
         pass
@@ -34,10 +38,8 @@ class FeatureWrapper(InfluenceFunction):
     def isRoot(self):
         return self.name == "root"    
     
-
-    
-    def getParentFeature(self):
-        return self.parent
+#    def getParentFeature(self):
+#        return self.parent
 
     def __eq__(self, other):
         """
@@ -56,76 +58,61 @@ class FeatureWrapper(InfluenceFunction):
         Notes
         -----
             Counts how many times each --part-- is present in each --Feature--.
+            
+            Note that based on the logic implemented in SVEN APEL's code it is not conmutative.
+            
+            That is A * B would be split into ["A ", " B"] , B * A would be split into ["B ", " A"] so they wouldn't be considered equal.
         """
-        pass
+        if not (type(other) is FeatureWrapper):
+            
+            return False
+        
+        # Assume both self and other are of type of FeatureWrapper\        
+        thisFunctionStrArray = self.wellFormedExpression.split("*")
+        otherFunctionStrArray = other.wellFormedExpression.split("*")
+        
+        if not(len(thisFunctionStrArray) == len(otherFunctionStrArray)):
+            return False
+        
+        thisPartsStrToIntDct = {}
+        
+#        print ( "Has same size of str array, thisFunctionStrArray = {0},  otherFunctionStrArray = {1} ".format(\
+#               str(thisFunctionStrArray), str(otherFunctionStrArray)))
+        
+         # Count of Ocurrence of parts in self.
+        for aPart in thisFunctionStrArray:
+            if aPart in thisPartsStrToIntDct.keys():
+                thisPartsStrToIntDct[aPart] = thisPartsStrToIntDct[aPart] + 1
+            else:
+                thisPartsStrToIntDct[aPart] = 1
+#        print ("Got as thisPartsStrToIntDct == {0}".format(str(thisPartsStrToIntDct)))
+        
+         # Check if exact same number of parts exist in other
+        for aPart in otherFunctionStrArray:
+#            print ("iterating to remove {0}".format(aPart))
+            if aPart  in thisPartsStrToIntDct.keys():
+                remainingNumber = thisPartsStrToIntDct[aPart] - 1
+                if (remainingNumber > 0):
+                    thisPartsStrToIntDct[aPart] = remainingNumber
+                else:
+                    del thisPartsStrToIntDct[aPart]
+            else:
+#                print ("{0} not in keys {1}".format(aPart, str(thisPartsStrToIntDct.keys())))
+                return False
+        
+        if len (thisPartsStrToIntDct) > 0:
+            return False
+        
+        return True
+
    
-    def compare(self):
-        pass
-    
-    def GetHashCode(self):
-        pass
-    
-    def initHashCode(self):
-        pass
+    def __hash__(self):
+        """
+        Corresponds to GetHashCode in C# implementation.
+        """
+        return self.name.__hash__()
     
     def getVariabilityModel(self):
         return self.VariabilityModel
-    
-
-"""
-            Feature other = (Feature) obj;
-
-            string[] thisFuntion = this.wellFormedExpression.Split('*');
-            string[] otherFunction = other.wellFormedExpression.Split('*');
-
-            if (thisFuntion.Length != otherFunction.Length)
-                return false;
-
-            Dictionary<string, int> thisParts = new Dictionary<string, int>();
-            foreach (string part in thisFuntion)
-            {
-                if (thisParts.ContainsKey(part))
-                {
-                    int value = thisParts[part] + 1;
-                    thisParts.Remove(part);
-                    thisParts.Add(part, value);
-                }
-                else
-                {
-                    thisParts.Add(part, 1);
-                }
-            }
 
 
-            foreach (string part in otherFunction)
-            {
-                if (thisParts.ContainsKey(part))
-                {
-                    int remainingNumber = thisParts[part] - 1;
-                    thisParts.Remove(part);
-                    if (remainingNumber > 0)
-                    {
-                        thisParts.Add(part, remainingNumber);
-                    }
-
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            if (thisParts.Count > 0)
-                return false;
-
-""" 
-
-
-#    def isBasicFeature(self):
-#        return self.isBasic 
-    
-#    def getXOffset(self):
-#        """
-#        Used when mapping to 'original features'
-#        """
-#        return self.XOffset

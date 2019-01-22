@@ -12,7 +12,7 @@ from sklearn.linear_model import LinearRegression
 from FeatureWrapper import FeatureWrapper
 from LearningRound import LearningRound
 from Interaction import Interaction
-import mlsettings 
+import MLSettings
 
 
 
@@ -25,7 +25,7 @@ class FeatureSubsetSelection(object):
     ----- 
     Depends on   
     """
-    def __init__(self, infModel):
+    def __init__(self, infModel, tmpMLSettings):
         """      
         Constructor of the learning class. It reads all configuration options and generates candidates for possible influences (i.e., features).
         Parameters
@@ -34,7 +34,7 @@ class FeatureSubsetSelection(object):
             The influence model which will later hold all determined influences and contains the variability model from which we derive all configuration options.
         """
         self.infModel = infModel
-        self.MLSettings = None
+        self.MLSettings = tmpMLSettings
         
         self.learningHistory = []
         self.hierachyLevel = 1
@@ -101,7 +101,7 @@ class FeatureSubsetSelection(object):
                 bestRound = LRound
         
         #  Update dictionaries InteractionInfluence and BinaryOptionsInfluence in Influence model.
-        for f in bestRound.FeatureSet:
+        for f in bestRound.featureSet:
             if len(f.participatingBoolOptions) == 1 and f.getNumberOfParticipatingOptions() == 1:
                 # Single Boolean Influence
                 self.infModel.BinaryOptionsInfluence[f.participatingBoolOptions[0]] = f
@@ -115,7 +115,7 @@ class FeatureSubsetSelection(object):
         """
         Returns set of Features currently selected.
         """
-        return self.FeatureSet    
+        return self.featureSet    
             
     def performForwardStep(self, currentLearningRound):
         """
@@ -142,7 +142,13 @@ class FeatureSubsetSelection(object):
         #Go through each feature of the initial set and combine them with the already present features to build new candidates
         candidates = []
         for aBasicFeature in self.initialFeatures:
-            candidates.extend(self.generateCandidates(currentLearningRound.FeatureSet, aBasicFeature))
+#            print ("Generating Candidates for {0}".format(aBasicFeature.name ))
+            candidates.extend(self.generateCandidates(currentLearningRound.featureSet, aBasicFeature))
+            
+#            print("Accumulated Candidates were ")
+#            print([x.name for x  in candidates])
+#        return # ONLY_TESTING_RETURN
+
 
         dctErrorOfFeature = {}
         bestCandidate = None
@@ -156,7 +162,7 @@ class FeatureSubsetSelection(object):
             if (aCandidateFeature in dctErrorOfFeature.keys()):
                 continue
             
-            newModel = self.copyCombinationFeatures(currentLearningRound.FeatureSet)
+            newModel = self.copyCombinationFeatures(currentLearningRound.featureSet)
             newModel.append(aCandidateFeature)
         
             if (not self.fitModel(newModel)):
@@ -228,13 +234,17 @@ class FeatureSubsetSelection(object):
         #   if basicFeature is not part of current model, then add it.       
         if basicFeature not in currentModel:
             listOfCandidates.append(basicFeature)
-        
+    
+#        print ("Candidates from basicFeature ")
+#        print ([x.name for x in listOfCandidates])
+#        return [] # ONLY_TESTING_RETURN
+    
         for aFeature in currentModel:
-
+#            print ("Checking for aFeature {0}".format(aFeature.name))
             # Do not generate interactions beyond desired feature size.
-            #    if (this.MLsettings.limitFeatureSize && (feature.getNumberOfParticipatingOptions() == this.MLsettings.featureSizeTrehold))
+            #    if (this.MLSettings.limitFeatureSize && (feature.getNumberOfParticipatingOptions() == this.MLSettings.featureSizeTrehold))
             #        continue;
-            if self.MLsettings.limitFeatureSize and (aFeature.getNumberOfParticipatingOptions() == self.MLsettings.featureSizeTrehold):
+            if self.MLSettings.limitFeatureSize and (aFeature.getNumberOfParticipatingOptions() == self.MLSettings.featureSizeTrehold):
                 continue
             
             # Exclude interactions with the root option and interactions of a binart feature with itself.       
@@ -244,7 +254,7 @@ class FeatureSubsetSelection(object):
             #                    || basicFeature.participatingNumOptions.Count == 0 && basicFeature.participatingBoolOptions.Count == 1 && basicFeature.participatingBoolOptions.ElementAt(0) == infModel.Vm.Root)
             #                    continue;            
             if ( (aFeature.getNumberOfParticipatingOptions() == 1) and \
-                aFeature.participatingBoolOptions[0]  == self.infModel.vm.getRoot()):                
+                list(aFeature.participatingBoolOptions)[0]  == self.infModel.vm.getRoot()):                
                 continue            
             
             # Exclude Binary times the same binary 
@@ -270,6 +280,7 @@ class FeatureSubsetSelection(object):
                    listOfCandidates.append(newCandidate)
       
         
+#        print ("Will return the following list of candidates {0}".format(str([x.name for x in listOfCandidates])))
         return listOfCandidates        
     
     
@@ -288,31 +299,36 @@ class FeatureSubsetSelection(object):
 
         if len(self.strictlyMandatoryFeatures) > 0:
             
-            currentLearningRound.FeatureSet.extend(self.strictlyMandatoryFeatures)
+            currentLearningRound.featureSet.extend(self.strictlyMandatoryFeatures)
             
         oldRoundError = float("inf")
         
         stayInLoop = True
         
-        
+        #return
+       
         # Perform forward steps until reaching saturation.
         while(stayInLoop):
             oldRoundError = currentLearningRound.validationError
             
+            print("Performing Forward step")
             currentLearningRound = self.performForwardStep(currentLearningRound);
 
+            return # ONLY_TESTING_RETURN
+        
             if currentLearningRound == None:
                 return
             
             self.learningHistory.append(currentLearningRound)
-            
+
+                        
             if self.MLSettings.useBackward:
                 
                 currentLearningRound = self.performBackwardStep(currentLearningRound)
                 
                 self.learningHistory.append(currentLearningRound)
 
-
+            
             stayInLoop =  not (self.abortLearning(currentLearningRound, oldRoundError))
         # End While
         self.updateInfluenceModel()
@@ -491,9 +507,9 @@ class FeatureSubsetSelection(object):
                 return true;
             if (abortDueError(current))
                 return true;
-            if (current.validationError + this.MLsettings.minImprovementPerRound > oldRoundError)
+            if (current.validationError + this.MLSettings.minImprovementPerRound > oldRoundError)
             {
-                if (this.MLsettings.withHierarchy)
+                if (this.MLSettings.withHierarchy)
                 {
                     hierachyLevel++;
                     return false;
@@ -503,7 +519,7 @@ class FeatureSubsetSelection(object):
             }
             return false;
         """
-        if (currentLearningRound.round >= self.MLsettings.numberOfRounds):
+        if (currentLearningRound.round >= self.MLSettings.numberOfRounds):
                 return True
         return False
 
@@ -574,7 +590,7 @@ class FeatureSubsetSelection(object):
         -------
         The error depending on the configured loss function (e.g., relative, least squares, absolute), and the relative error.         
         """
-        if self.MLsettings.crossValidation:
+        if self.MLSettings.crossValidation:
             return self.computeValidationError(currentModel)
         else:
         
@@ -729,11 +745,11 @@ class FeatureSubsetSelection(object):
         -------
         A new model that might be smaller than the original one and might have a slightly worse prediction accuracy.        
         """
-        if (current.roundNum < 3 or len(current.FeatureSet) < 2):
+        if (current.roundNum < 3 or len(current.featureSet) < 2):
             return current
         
         abort = False
-        tmpFeatureSet = self.copyCombination(current.FeatureSet);
+        tmpFeatureSet = self.copyCombination(current.featureSet);
         while(not abort):
                 roundError = float("inf")
                 toRemove = None
@@ -744,7 +760,7 @@ class FeatureSubsetSelection(object):
                     
                     error, relativeError = self.computeModelError(tempSet)
                     
-                    if ( (error - self.MLsettings.backwardErrorDelta) < current.validationError and error < roundError):
+                    if ( (error - self.MLSettings.backwardErrorDelta) < current.validationError and error < roundError):
                         roundError = error
                         toRemove = deletionCandidate                        
                     
@@ -754,5 +770,5 @@ class FeatureSubsetSelection(object):
                 if len(tmpFeatureSet)<= 2:
                     abort = True
                         
-        current.FeatureSet = tmpFeatureSet
+        current.featureSet = tmpFeatureSet
         return current

@@ -6,6 +6,9 @@ Created on Thu Jan 10 13:42:15 2019
 @author: rafaelolaechea
 """
 
+from collections import deque
+
+
 class InfluenceFunction(object):
     """
 
@@ -30,11 +33,14 @@ class InfluenceFunction(object):
 
         self.wellFormedExpression = ""
         
-        self.parseExpressionToPolishNotation(expression)  # creates wellFormedExpression
+        self.expressionArray = []
         
-        self.participatingBoolOptions = set() #HashSet.
-        
+        self.participatingBoolOptions = set() #HashSet transformed to list.
+
         self.numberOfParticipatingFeatures = 0
+        
+        self.parseExpressionToPolishNotation(expression)  # creates wellFormedExpression
+
         
     def combineFunctions(self, left,  right):
         """
@@ -48,12 +54,16 @@ class InfluenceFunction(object):
     def getNumberOfParticipatingOptions(self):
         """
         Counts the number of configuration options participating in the function. If an option apears multiple times in the function, it is counted multiple times.
+        
+        TODO.
         """
+        return self.numberOfParticipatingFeatures
         
     def getNumberOfDistinctParticipatingOptions(self):
         """
         Counts the number of different configuration options participating in the function. Mutliple occurrences of an option are ignored.
         """
+        
     
     def evaluate(self, config):
         """
@@ -149,24 +159,38 @@ class InfluenceFunction(object):
         
         Side Effects
         
-        Fills wellFormedExpression and Expression Array        
+        Fills wellFormedExpression and Expression Array  
+        
+        TODO
         """
         pass
     
-        strQueue = []
+        strQueue = deque([])
         strStack = []
         
         expression = self._createWellFormedExpression(expression).strip()
+        
         self.wellFormedExpression = expression
         
         expr = expression.split(" ")
         
+#        print("Split Expr is " + str(expr))
+        
         i = 0
-        while (i <= len(expr)):
+        while (i < len(expr)):
+            
             token = expr[i]
             
             if (self._isOperator(token)):
-                pass
+                if (len(strStack) > 0):
+                    # strStack[-1] == strStack.PEEK
+                    while( (len(strStack) > 0) and self._isOperator(strStack[-1]) and self._operatorHasGreaterPrecedence(strStack[-1], token) ):
+                        strQueue.append(strStack.pop())
+                    pass
+                
+                strStack.append(token)
+                i = i + 1
+                continue
  #                  if (stack.Count > 0)
  #                   {
  #                       while (stack.Count > 0 && InfluenceFunction.isOperator(stack.Peek()) && InfluenceFunction.operatorHasGreaterPrecedence(stack.Peek(), token))
@@ -177,96 +201,41 @@ class InfluenceFunction(object):
  #                   stack.Push(token);
  #                   continue;
             elif token == "(":
-                pass
+                strStack.append(token)
             elif token == "[":
-                pass
+                strStack.append(token)
             elif token == "{":
-                pass            
+                 strStack.append(token)            
             elif token == "<":
-                pass
-            elif token == ")":
-                pass
+                 strStack.append(token)
+            elif token == "(":
+                while (not (strStack[-1] == "(")):
+                    strQueue.append(strStack.pop())
+                strStack.pop()
+                i = i + 1
+                continue
             elif token == "]":
-                pass
+                while (not (strStack[-1] == "[")):
+                    strQueue.append(strStack.pop())
+                strQueue.append("]");
+                strStack.pop()
+                i = i + 1                 
 
+                        
             # Token is number or a feature which has a value
             # features existing in the function but not in the feature model, have to be accepted too
-            self.tokenIsAFeatureOrNumber(token, self.varModel);
-            queue.Enqueue(token);
+            self._tokenIsAFeatureOrNumber(token);
+
+            strQueue.append(token)
                
             i = i + 1
-    
-"""
-            Queue<string> queue = new Queue<string>();
-            Stack<string> stack = new Stack<string>();
+        
+        while(len(strStack) > 0):
+            strQueue.append(strStack.pop())
+        
+        self.expressionArray = list(strQueue)
 
-            expression = createWellFormedExpression(expression).Trim();
-            this.wellFormedExpression = expression;
-            string[] expr = expression.Split(' ');
 
-            for (int i = 0; i < expr.Length; i++)
-            {
-                string token = expr[i];
-
-                
-                if (InfluenceFunction.isOperator(token))
-                {
-                    if (stack.Count > 0)
-                    {
-                        while (stack.Count > 0 && InfluenceFunction.isOperator(stack.Peek()) && InfluenceFunction.operatorHasGreaterPrecedence(stack.Peek(), token))
-                        {
-                            queue.Enqueue(stack.Pop());
-                        }
-                    }
-                    stack.Push(token);
-                    continue;
-                }
-                else if (token.Equals("("))
-                    stack.Push(token);
-                else if (token.Equals("["))
-                    stack.Push(token);
-                else if (token.Equals("{"))
-                    stack.Push(token);
-                else if (token.Equals("<"))
-                    stack.Push(token);
-                
-                else if (token.Equals(")"))
-                {
-                    while (!stack.Peek().Equals("("))
-                    {
-                        queue.Enqueue(stack.Pop());
-                    }
-                    stack.Pop();
-                    continue;
-                }
-
-                else if (token.Equals("]"))
-                {
-                    while (!stack.Peek().Equals("["))
-                    {
-                        queue.Enqueue(stack.Pop());
-                    }
-                    queue.Enqueue("]");
-                    stack.Pop();
-                    continue;
-                }
-                // token is number or a feature which has a value
-                // features existing in the function but not in the feature model, have to be accepted too
-               tokenIsAFeatureOrNumber(token, this.varModel);
-               queue.Enqueue(token);
-               
-            }
-
-            // stack abbauen
-            while (stack.Count > 0)
-            {
-                queue.Enqueue(stack.Pop());
-            }
-            expressionArray = queue.ToArray();
-"""    
-    
-    
-    
     def _createWellFormedExpression(self,  expression):
         """
         Adds a whitespace before and after each special character (+,*,[,],....) and replaces each two pair of whitespaces with a single whitespace
@@ -277,7 +246,7 @@ class InfluenceFunction(object):
         
         Notes
         -----
-        No need for     replaceDifferentLogParts(expression) and replaceLogAndClosingBracket as we don't use logs.
+        No need for  replaceDifferentLogParts(expression) and replaceLogAndClosingBracket as we don't use logs.
         """
         while (expression.find(" ") != -1):
             expression = expression.replace(" ", "")
@@ -299,7 +268,57 @@ class InfluenceFunction(object):
         
         return expression
     
-    def _tokenIsAFeatureOrNumber(self):
+    def _tokenIsAFeatureOrNumber(self, token):
         """
-        TODO
+        Adds the feature/option corresponding to the token to the list of Options involved in the influence function and updates  numberOfParticipatingFeatures    
+        
+        Parameters
+        ----------
+        token : string
+        Name of a feature or a number/double.
+        
+        Returns
+        -------
+        True if token correctly parsed.
+        
+
         """
+        token = token.strip()
+        
+        isFloat = True
+        try:
+            tmpVal = float(token)
+        except ValueError:
+            isFloat = False
+        
+        if isFloat:
+             # just a number so ignore.
+            return True
+        
+        # Will now parse a string.
+        binOption = self.varModel.getBinaryOption(token);
+        if (not (binOption == None)):
+            if (not (binOption in self.participatingBoolOptions)):
+                self.participatingBoolOptions.add(binOption)
+                
+            self.numberOfParticipatingFeatures = self.numberOfParticipatingFeatures + 1 
+            return True
+        
+        return False
+    
+
+        
+    def _isOperator(self, token):
+        """
+        Check if token corresponds to an operator (*, or  +)
+        """
+        token = token.strip()
+            
+        if(token == "+"):
+            return True
+
+        if(token == "*"):
+            return True
+    
+        return False
+    
