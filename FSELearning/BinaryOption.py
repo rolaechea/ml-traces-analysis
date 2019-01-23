@@ -268,7 +268,9 @@ class BinaryOption(object):
     
     def CompareTo(self, otherOption):
         """
-        Compare to other option by name
+        Compare to other option by name        
+        In python is based on < operator. 
+        
 
         Parameters
         ----------        
@@ -276,7 +278,13 @@ class BinaryOption(object):
         """
         return self.name == self.name
         
-
+    def __gt__(self, otherOption):
+        """
+        Implements compareTo operator by using < comparison --- enables sorting.
+        """
+        return self.name < otherOption.name
+    
+    
     def isAlternativeGroup(self, excludedOptions):
         """
         Checks whether the given list of options have the same parent to decide if they all form an alternative group

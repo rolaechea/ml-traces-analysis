@@ -322,3 +322,12 @@ class InfluenceFunction(object):
     
         return False
     
+    def ToString(self):
+        """
+        Represent a --Feature Wrapper / Influence function -- as a string.
+
+        TODO        
+        """
+        tmpRet = self.wellFormedExpression
+        
+        return tmpRet

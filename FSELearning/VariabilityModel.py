@@ -5,7 +5,9 @@ Created on Thu Jan 10 15:41:13 2019
 
 @author: rafaelolaechea
 """
-from BinaryOption import BinaryOption
+import BinaryOption
+import Configuration
+#from BinaryOption. BinaryOption import BinaryOption. BinaryOption
 
     
 class VariabilityModel(object):
@@ -19,7 +21,7 @@ class VariabilityModel(object):
                 
         self.binaryOptions = []
                 
-        self.root = BinaryOption(self, "root")
+        self.root = BinaryOption.BinaryOption(self, "root")
         
         self.binaryOptions.append(self.root) 
         
@@ -92,16 +94,18 @@ class VariabilityModel(object):
     
     def getRoot(self):
         """
-        Returns the BinaryOption representing root.
+        Returns the BinaryOption. BinaryOption representing root.
         """
         return self.root
     
     
 def createChildOption(varMod, optionName):
-    binOp1 =  BinaryOption(varMod, optionName)
+    binOp1 =  BinaryOption.BinaryOption(varMod, optionName)
     
     binOp1.optional = True
    
+    binOp1.defaultValue = BinaryOption.BINARY_VALUE_DESELECTED
+    
     varMod.addConfigurationOption(binOp1)
     
 def generateX264VariabilityModel():
@@ -139,3 +143,53 @@ def generateX264VariabilityModel():
 
 # Test that generate Candidates is working properly.
     
+
+
+def generateLearningAndValidationSetX264(vmX264):    
+    """
+    Generates (say 5) learning and validation configurations to to test FeatureSubsetSelection 
+    
+    """
+    lstLearningMeasurements = []    
+    lstValidationsMeasurements = []
+    
+    tmpRoot = vmX264.getBinaryOption("root")
+    
+   
+    count = 0
+    for i in range(1,4):
+        for j in range(1,4):
+            for k in range(0,2):
+                refOptionToUse = vmX264.getBinaryOption("ref_" + str(i))
+                bframeOptionToUse = vmX264.getBinaryOption("bframes_" + str(i))
+                if k == 0:
+                    useDeblockOption = True
+                    deblockOptionToUse = vmX264.getBinaryOption("deblock")
+                else:
+                    useDeblockOption = False 
+                count = count + 1
+                
+                if useDeblockOption:
+                    dctCurrent = {tmpRoot:BinaryOption.BINARY_VALUE_SELECTED , refOptionToUse:BinaryOption.BINARY_VALUE_SELECTED, bframeOptionToUse:BinaryOption.BINARY_VALUE_SELECTED, deblockOptionToUse:BinaryOption.BINARY_VALUE_SELECTED } 
+                else:
+                    dctCurrent = {tmpRoot:BinaryOption.BINARY_VALUE_SELECTED, refOptionToUse: BinaryOption.BINARY_VALUE_SELECTED, bframeOptionToUse : BinaryOption.BINARY_VALUE_SELECTED}
+                
+                if i == 1:
+                    if k == 1:
+                        measuredNFP = 100.0
+                    else:
+                        measuredNFP = 80
+                else:
+                    if k == 1:
+                        measuredNFP = 40
+                    else:
+                        measuredNFP = 20
+                    
+                tmpCurrentConfiguration = Configuration.Configuration(dctCurrent, measuredNFP)
+                
+                if (count% 2 == 0):
+                    lstLearningMeasurements.append(tmpCurrentConfiguration)
+                else:
+                    lstValidationsMeasurements.append(tmpCurrentConfiguration)
+                    
+    return lstLearningMeasurements, lstValidationsMeasurements

@@ -5,11 +5,13 @@ Created on Thu Jan 10 16:56:26 2019
 
 @author: rafaelolaechea
 """
+import BinaryOption
 
 class Configuration(object):    
     def __init__(self, binarySelection, measuremement):
         """
-        Creates a configuration with the given set an binary and numeric features selected, not existing ones take default values.
+        Creates a configuration with the given set an binary and numeric features selected, 
+        not existing ones take default values (aka FALSE).
         
         Parameters
         ----------
@@ -39,57 +41,40 @@ class Configuration(object):
         self.identifier = self.generateIdentifier(",")
         
         
-    def generateIdentifier( separator):
+    def generateIdentifier(self, separator):
         """
         Returns the identifier describing the choice of binary configuration options
         
         
         Notes
         -----
-        
-
-            // sort binary features by name
-            var binarySelection = binaryOptions.Keys.ToList();
-            binarySelection.Sort();
-
-            // sort numeric features by name
-            var numericSelection = numericOptions.Keys.ToList();
-            numericSelection.Sort();
-
-            StringBuilder sb = new StringBuilder();
-
-            foreach (BinaryOption binary in binarySelection)
-            {
-                if(binaryOptions[binary].Equals(BinaryOption.BinaryValue.Selected))
-                    sb.Append(binary.Name+ separator);
-            }
-
-            foreach (NumericOption numeric in numericSelection)
-            {
-                sb.Append(numeric.Name +"="+ numericOptions[numeric] + separator);
-            }
-            
-
-
-            return sb.ToString();        
-        
+        identifier is (optionName followed by separator)* for all options that are selected from dctBinaryOptionValues dictionary.
         """
-        return ""
-    
+        
+        tmpLstBinaryOptions = [x for x in self.dctBinaryOptionValues.keys()]
+        tmpLstBinaryOptions.sort()
+        
+        sbIdentifier= ""
+        for eachBinaryOption in tmpLstBinaryOptions:
+            if self.dctBinaryOptionValues[eachBinaryOption] == BinaryOption.BINARY_VALUE_SELECTED:
+                sbIdentifier +=   eachBinaryOption.name + separator
 
-    def getNfpValue(self):
-        return self.nfpValue
+        return sbIdentifier
     
-"""
-        /// <summary>
-        /// Compares one configuration with an other configuration. The identifiers of the configurations are used in the comparison. 
-        /// </summary>
-        /// <param name="other">Configuration to compare</param>
-        /// <returns>States whether the two configurations desribes the same configuration option selection.</returns>
-        public int CompareTo(Configuration other)
-        {
-            return this.identifier.CompareTo(other.identifier);
-        }
-"""
-    def setNfpValue(self):
-        pass
+    def getNfpValue(self):
+        return self.nfpValue    
+
+    def setNfpValue(self, newNFPVal):
+        self.nfpValue = newNFPVal
+    
+   
+#        /// <summary>
+#        /// Compares one configuration with an other configuration. The identifiers of the configurations are used in the comparison. 
+#        /// </summary>
+#        /// <param name="other">Configuration to compare</param>
+#        /// <returns>States whether the two configurations desribes the same configuration option selection.</returns>
+#        public int CompareTo(Configuration other)
+#        {
+#            return this.identifier.CompareTo(other.identifier);
+#        }
+# 

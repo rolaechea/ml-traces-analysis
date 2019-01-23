@@ -64,6 +64,10 @@ class FeatureSubsetSelection(object):
         Checks whether all information is available to start learning.
         
         Requires at a minimum that the learning and validation set have been initialized.
+        
+        Returns
+        -------        
+        True if both learningSet and validationSet are not empty.
         """
         if (len(self.learningSet) == 0 or len(self.validationSet)==0):
             return False
@@ -142,14 +146,8 @@ class FeatureSubsetSelection(object):
         #Go through each feature of the initial set and combine them with the already present features to build new candidates
         candidates = []
         for aBasicFeature in self.initialFeatures:
-#            print ("Generating Candidates for {0}".format(aBasicFeature.name ))
             candidates.extend(self.generateCandidates(currentLearningRound.featureSet, aBasicFeature))
             
-#            print("Accumulated Candidates were ")
-#            print([x.name for x  in candidates])
-#        return # ONLY_TESTING_RETURN
-
-
         dctErrorOfFeature = {}
         bestCandidate = None
         
@@ -235,12 +233,7 @@ class FeatureSubsetSelection(object):
         if basicFeature not in currentModel:
             listOfCandidates.append(basicFeature)
     
-#        print ("Candidates from basicFeature ")
-#        print ([x.name for x in listOfCandidates])
-#        return [] # ONLY_TESTING_RETURN
-    
         for aFeature in currentModel:
-#            print ("Checking for aFeature {0}".format(aFeature.name))
             # Do not generate interactions beyond desired feature size.
             #    if (this.MLSettings.limitFeatureSize && (feature.getNumberOfParticipatingOptions() == this.MLSettings.featureSizeTrehold))
             #        continue;
@@ -311,16 +304,13 @@ class FeatureSubsetSelection(object):
         while(stayInLoop):
             oldRoundError = currentLearningRound.validationError
             
-            print("Performing Forward step")
             currentLearningRound = self.performForwardStep(currentLearningRound);
-
-            return # ONLY_TESTING_RETURN
-        
+   
+            # Dead code from SVEN.     
             if currentLearningRound == None:
                 return
             
             self.learningHistory.append(currentLearningRound)
-
                         
             if self.MLSettings.useBackward:
                 
@@ -385,7 +375,9 @@ class FeatureSubsetSelection(object):
         # This is done by transposing columns representing values of each feature across the learning set.        
         rowsOfFeatureValueList = []
         for eachFeature in newModel:
+            print ("Creating a tmpFeatureColumn for feature {0}".format(eachFeature.name))
             tmpFeatureColumn = self.createSingleFeatureValuesList(eachFeature)
+            print("Received tmpFeatureColumn = {0}".format(str( tmpFeatureColumn)))
             rowsOfFeatureValueList.append(tmpFeatureColumn)
             
         rowsOfFeatureValueList = np.array(rowsOfFeatureValueList).T.tolist()            
@@ -394,6 +386,11 @@ class FeatureSubsetSelection(object):
         # Execute Regression.
         theLinearRegressor =  LinearRegression(fit_intercept=False) 
         # fit_intercept is set to False to follow Sven's impl. as the root parameters acts as anchors to create intercept weights.
+        #
+        #
+        # TODO -- pasing Ready to Perform Regression, 
+        # rowsOfFeatureValueList = [[None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None]]
+        print("Ready to Perform Regression, rowsOfFeatureValueList = {0}".format(str(rowsOfFeatureValueList)))
         theLinearRegressor.fit(rowsOfFeatureValueList, self.Y_learning)
 
 
@@ -432,20 +429,16 @@ class FeatureSubsetSelection(object):
         # Copy configurations to learning set, and values of configurations to Y learning.
         for aConfiguration in measurements:
             self.learningSet.append(aConfiguration)
-            val = aConfiguration.getNFPValue()
+            val = aConfiguration.getNfpValue()
             self.Y_learning.append(val)
         
         # Remove features that are either always present or always absent.
         tmpFeaturesToRemove = []
         for eachInitialFeature in self.initialFeatures:
+
+            columnOfFeaturePresence = self.createSingleFeatureValuesList(eachInitialFeature)            
             
-            tmpSingleFeatureList = []
-            
-            tmpSingleFeatureList.append(eachInitialFeature)
-            
-            columnOfFeaturePresence = self.createSingleFeatureValuesList(tmpSingleFeatureList)            
-            
-            countNbFeatureSelections, countNbFeatureDeselections = 0
+            countNbFeatureSelections, countNbFeatureDeselections = 0, 0
             
             for aVal in columnOfFeaturePresence:
                 if aVal == 1:
@@ -488,7 +481,7 @@ class FeatureSubsetSelection(object):
         """
         for aConfiguration in measurements:
             self.validationSet.append(aConfiguration)
-            val = aConfiguration.getNFPValue()
+            val = aConfiguration.getNfpValue()
             self.Y_validation.append(val)        
         
     def abortLearning(self, currentLearningRound,  oldRoundError):
@@ -679,16 +672,23 @@ class FeatureSubsetSelection(object):
         -----
         Adapted from createDataMatrix and generateDM_column                   
         """
+#        print("theFeature " + str(theFeature))
         if theFeature in self.DM_columnsCache.keys():            
             # Return soted column vector             
+            print(" The feature {0} is  in cache ".format(theFeature.name))
             return self.DM_columnsCache[theFeature]
 
         else:
+            print(" The feature {0} not in cache ".format(theFeature.name))
             # Create column vector and store in cache. 
             columnVector = [0 for x in range(len(self.learningSet))]
+            
+            print("ColumnVector set to {0}".format(str(columnVector)))
+            
             i = 0
             for eachConfiguration in self.learningSet:
                 if (theFeature.isValidConfig(eachConfiguration)):
+                    # Missing Implementation evalOnConfiguration
                     columnVector[i] = theFeature.evalOnConfiguration(eachConfiguration)
                 i += 1
             

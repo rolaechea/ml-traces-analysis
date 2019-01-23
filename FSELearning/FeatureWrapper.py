@@ -33,6 +33,11 @@ class FeatureWrapper(InfluenceFunction):
         super(FeatureWrapper, self).__init__(self.name, VariabilityModel)
         
     def evalOnConfiguration(self, aConfiguration):
+        """
+        Report the value of the feature in aConfiguration.
+        
+        TODO -- Recurse until evaluating binary values.
+        """
         pass
     
     def isRoot(self):
@@ -113,6 +118,13 @@ class FeatureWrapper(InfluenceFunction):
         return self.name.__hash__()
     
     def getVariabilityModel(self):
-        return self.VariabilityModel
+        return self.varModel
+
+    def isValidConfig(self, aConf):
+        """
+        TODO understand what does isvalid config wrt to CONF for a feature mean.
+        """
+        return True
 
 
+        
