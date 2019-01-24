@@ -38,9 +38,108 @@ currentModel == CURRENT
 import MLSettings
 import VariabilityModel
 import InfluenceModels
-#import BinaryOption
+import Configuration
+import BinaryOption
 #import FeatureWrapper
 import FeatureSubsetSelection
+import random
+
+
+def createChildOption(varMod, optionName):
+    binOp1 =  BinaryOption.BinaryOption(varMod, optionName)
+    
+    binOp1.optional = True
+   
+    binOp1.defaultValue = BinaryOption.BINARY_VALUE_DESELECTED
+    
+    varMod.addConfigurationOption(binOp1)
+    
+
+# Test that generate Candidates is working properly.
+    
+def generateX264VariabilityModel():
+    """
+    Hard code generation of X264 Var model.
+    
+    NOTES
+    -----
+    Will later transform to load from XML.
+
+    Parameters.    
+    """
+    vmX264 = VariabilityModel.VariabilityModel("x264_model")
+
+# Reference frames.
+
+    createChildOption(vmX264, "ref_1")
+    
+    createChildOption(vmX264, "ref_2")
+
+    createChildOption(vmX264, "ref_3")
+
+# BFRAMES.
+    createChildOption(vmX264, "bframes_1")
+
+    createChildOption(vmX264, "bframes_2")
+
+    createChildOption(vmX264, "bframes_3")
+    
+# Deblocl
+    createChildOption(vmX264, "deblock")    
+    
+    return vmX264
+
+def generateLearningAndValidationSetX264(vmX264):    
+    """
+    Generates (say 5) learning and validation configurations to to test FeatureSubsetSelection 
+    
+    """
+    lstLearningMeasurements = []    
+    lstValidationsMeasurements = []
+    
+    tmpRoot = vmX264.getBinaryOption("root")
+    
+    random.seed(2000)
+   
+    count = 0
+    for i in range(1,4):
+        for j in range(1,4):
+            for k in range(0,2):
+                refOptionToUse = vmX264.getBinaryOption("ref_" + str(i))
+                bframeOptionToUse = vmX264.getBinaryOption("bframes_" + str(j))
+                if k == 0:
+                    useDeblockOption = True
+                    deblockOptionToUse = vmX264.getBinaryOption("deblock")
+                else:
+                    useDeblockOption = False 
+                count = count + 1
+                
+                if useDeblockOption:
+                    dctCurrent = {tmpRoot:BinaryOption.BINARY_VALUE_SELECTED , refOptionToUse:BinaryOption.BINARY_VALUE_SELECTED, bframeOptionToUse:BinaryOption.BINARY_VALUE_SELECTED, deblockOptionToUse:BinaryOption.BINARY_VALUE_SELECTED } 
+                else:
+                    dctCurrent = {tmpRoot:BinaryOption.BINARY_VALUE_SELECTED, refOptionToUse: BinaryOption.BINARY_VALUE_SELECTED, bframeOptionToUse : BinaryOption.BINARY_VALUE_SELECTED}
+                
+                if i == 1:
+                    if k == 1:
+                        measuredNFP = 100.0
+                    else:
+                        measuredNFP = 80
+                else:
+                    if k == 1:
+                        measuredNFP = 40
+                    else:
+                        measuredNFP = 20
+                    
+                tmpCurrentConfiguration = Configuration.Configuration(dctCurrent, measuredNFP)
+                
+                tmpChoice = random.choice([0, 1])
+                if (tmpChoice  == 0):
+                    lstLearningMeasurements.append(tmpCurrentConfiguration)
+                else:
+                    lstValidationsMeasurements.append(tmpCurrentConfiguration)
+                    
+    return lstLearningMeasurements, lstValidationsMeasurements
+
 
 if __name__ == "__main__":
     """
@@ -52,7 +151,7 @@ if __name__ == "__main__":
         deblock   -20
     """
     
-    vmX264 = VariabilityModel.generateX264VariabilityModel()
+    vmX264 = generateX264VariabilityModel()
     
     print ("{0} options by default. ".format(len(vmX264.binaryOptions)))
     
@@ -70,7 +169,7 @@ if __name__ == "__main__":
     print("Feature subset selection sent as strictly mandatory features {0}".format( str([x.name for x in tmpSubsetSelection.strictlyMandatoryFeatures])))
     
     # Correct testing.
-    lstLearningX264, lstValidationX264 = VariabilityModel.generateLearningAndValidationSetX264(vmX264)
+    lstLearningX264, lstValidationX264 = generateLearningAndValidationSetX264(vmX264)
     
     tmpSubsetSelection.setLearningSet(lstLearningX264)
     
