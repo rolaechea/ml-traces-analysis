@@ -66,8 +66,8 @@ if __name__ == "__main__":
     
     tmpSubsetSelection =    FeatureSubsetSelection.FeatureSubsetSelection(InfModelX264, TmpMLSettings)
     
-    print("Feature subset selection has as initial features {0}".format( str([x.name for x in tmpSubsetSelection.initialFeatures])))
-    print("Feature subset selection has as strictly mandatory features {0}".format( str([x.name for x in tmpSubsetSelection.strictlyMandatoryFeatures])))
+    print("Feature subset selection sent as initial features {0}".format( str([x.name for x in tmpSubsetSelection.initialFeatures])))
+    print("Feature subset selection sent as strictly mandatory features {0}".format( str([x.name for x in tmpSubsetSelection.strictlyMandatoryFeatures])))
     
     # Correct testing.
     lstLearningX264, lstValidationX264 = VariabilityModel.generateLearningAndValidationSetX264(vmX264)
@@ -78,6 +78,35 @@ if __name__ == "__main__":
     
     tmpSubsetSelection.learn()    
     
-    print("Learned Succeded --- kind of.")
+    print("Learned Completed.")
+    
+#    print("Selected Features")    
+#    print([x.name for x in tmpSubsetSelection.infModel.binaryOptionsInfluence])
+    
+    if "root" in  [x.name for x in tmpSubsetSelection.infModel.binaryOptionsInfluence] and \
+       "ref_1" in [x.name for x in tmpSubsetSelection.infModel.binaryOptionsInfluence] and \
+       "deblock" in [x.name for x in tmpSubsetSelection.infModel.binaryOptionsInfluence]:
+           print ("Test Passed Correctly identified as primary features root, ref_1, and deblock" )
+    else:
+        print ("Test Failed. Did not  identify as primary features root, ref_1, and deblock" )
+    
+    desiredVals = {'root': 40.0, 'ref_1': 60.0, 'deblock': -20.0, }
+
+    TestPassed = True
+    for desiredKeyName  in desiredVals.keys():
+        foundCurrentDesiredItem = False
+        for x,y in tmpSubsetSelection.infModel.binaryOptionsInfluence.items():
+            if x.name == desiredKeyName and abs(desiredVals[desiredKeyName]-y.Constant) < 0.1:
+                foundCurrentDesiredItem = True
+        if foundCurrentDesiredItem == False:
+            TestPassed = False
+    if TestPassed:
+        print("Test Passed. Identified Correct Constant Values")
+    else:
+        print("Test Fao;ed. Identified Incorrect Constant Values")
+        mapBinaries = [(x.name,y.Constant) for x,y in tmpSubsetSelection.infModel.binaryOptionsInfluence.items()]
+        print (mapBinaries)
+#    print("Interactions")
+#    print([[y.name for y in x.binaryOptions] for x in tmpSubsetSelection.infModel.interactionInfluence])
     
     

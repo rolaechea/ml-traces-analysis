@@ -109,11 +109,11 @@ class FeatureSubsetSelection(object):
         for f in bestRound.featureSet:
             if len(f.participatingBoolOptions) == 1 and f.getNumberOfParticipatingOptions() == 1:
                 # Single Boolean Influence
-                self.infModel.BinaryOptionsInfluence[f.participatingBoolOptions[0]] = f
+                self.infModel.binaryOptionsInfluence[list(f.participatingBoolOptions)[0]] = f
                 continue
              
             NewInteraction = Interaction(f)
-            self.infModel.InteractionInfluence[NewInteraction] = f
+            self.infModel.interactionInfluence[NewInteraction] = f
             
          
     def getFeatureSet(self):
