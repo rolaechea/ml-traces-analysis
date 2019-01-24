@@ -7,6 +7,7 @@ Created on Thu Jan 10 15:41:13 2019
 """
 import BinaryOption
 import Configuration
+import random
 #from BinaryOption. BinaryOption import BinaryOption. BinaryOption
 
     
@@ -155,13 +156,14 @@ def generateLearningAndValidationSetX264(vmX264):
     
     tmpRoot = vmX264.getBinaryOption("root")
     
+    random.seed(2000)
    
     count = 0
     for i in range(1,4):
         for j in range(1,4):
             for k in range(0,2):
                 refOptionToUse = vmX264.getBinaryOption("ref_" + str(i))
-                bframeOptionToUse = vmX264.getBinaryOption("bframes_" + str(i))
+                bframeOptionToUse = vmX264.getBinaryOption("bframes_" + str(j))
                 if k == 0:
                     useDeblockOption = True
                     deblockOptionToUse = vmX264.getBinaryOption("deblock")
@@ -187,7 +189,8 @@ def generateLearningAndValidationSetX264(vmX264):
                     
                 tmpCurrentConfiguration = Configuration.Configuration(dctCurrent, measuredNFP)
                 
-                if (count% 2 == 0):
+                tmpChoice = random.choice([0, 1])
+                if (tmpChoice  == 0):
                     lstLearningMeasurements.append(tmpCurrentConfiguration)
                 else:
                     lstValidationsMeasurements.append(tmpCurrentConfiguration)

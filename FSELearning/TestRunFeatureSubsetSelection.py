@@ -53,6 +53,8 @@ if __name__ == "__main__":
     
     TmpMLSettings.useBackward = False
     
+    TmpMLSettings.numberOfRounds = 10
+    
     tmpSubsetSelection =    FeatureSubsetSelection.FeatureSubsetSelection(InfModelX264, TmpMLSettings)
     
     print("Feature subset selection has as initial features {0}".format( str([x.name for x in tmpSubsetSelection.initialFeatures])))

@@ -147,13 +147,30 @@ class InfluenceFunction(object):
     
     def validConfig(self, config):
         """
-        check whether all options in the influence function are also selected in the configuration. 
+        check whether all options in the influence function are also selected in the configuration --- ?
+        
+        TODO
         
         Parameters
         ----------
         config: Configuration
         """
-        pass
+        for aParticipatingBinOption in self.participatingBoolOptions:
+            if aParticipatingBinOption.name == "root":
+                continue
+            
+            if ((not (aParticipatingBinOption in config.dctBinaryOptionValues.keys())) or \
+                config.dctBinaryOptionValues[aParticipatingBinOption] == BinaryOption.BINARY_VALUE_DESELECTED):
+                
+                foundOption = False
+                
+                for aConfOption in config.dctBinaryOptionValues.keys():
+                    if aConfOption.name == aParticipatingBinOption.name:
+                        foundOption = True
+                if (not foundOption):
+                    return False
+
+        return True
     
     def parseExpressionToPolishNotation(self, expression):
         """
@@ -170,7 +187,7 @@ class InfluenceFunction(object):
         
         TODO
         """
-        print ("Parsing Expression {0}".format(expression))
+#        print ("Parsing Expression {0}".format(expression))
     
         strQueue = deque([])
         strStack = []
