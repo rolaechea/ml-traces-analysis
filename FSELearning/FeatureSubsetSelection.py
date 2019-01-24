@@ -152,7 +152,7 @@ class FeatureSubsetSelection(object):
         for aBasicFeature in self.initialFeatures:
             candidates.extend(self.generateCandidates(currentLearningRound.featureSet, aBasicFeature))
         
-        print ("Will consider Canidates = {0}\n".format(str([x.ToString() for x in candidates])))
+#        print ("Will consider Canidates = {0}\n".format(str([x.ToString() for x in candidates])))
         dctErrorOfFeature = {}
         bestCandidate = None
         
@@ -181,8 +181,8 @@ class FeatureSubsetSelection(object):
                     minimalErrorModel = newModel
                     bestCandidate = aCandidateFeature                # dead code from SVEN, prob. for debugging.
             
-            print ("\t Candidate {0} got errorOfModel = {1} temp = {2}".format(aCandidateFeature.ToString(), errorOfModel, temp))
-            print ("\tFitted values are {0}".format(str([(x.name, x.Constant) for x in newModel])))    
+#            print ("\t Candidate {0} got errorOfModel = {1} temp = {2}".format(aCandidateFeature.ToString(), errorOfModel, temp))
+#            print ("\tFitted values are {0}".format(str([(x.name, x.Constant) for x in newModel])))    
         
         errorTrain, relativeErrorTrain = self.computeLearningError(minimalErrorModel)
         errorEval, relativeErrorEval   = self.computeValidationError(minimalErrorModel)
@@ -311,7 +311,7 @@ class FeatureSubsetSelection(object):
         # Perform forward steps until reaching saturation.
         while(stayInLoop):
             indexCounting = indexCounting  + 1
-            print("Loop Id = {0}".format(indexCounting))
+#            print("Loop Id = {0}".format(indexCounting))
             oldRoundError = currentLearningRound.validationError
             
             currentLearningRound = self.performForwardStep(currentLearningRound);
@@ -320,7 +320,7 @@ class FeatureSubsetSelection(object):
             if currentLearningRound == None:
                 return
             
-            print("Learn Method Received Learning Round {0}".format(str([(x.name, x.Constant) for x in currentLearningRound.featureSet])))
+#            print("Learn Method Received Learning Round {0}".format(str([(x.name, x.Constant) for x in currentLearningRound.featureSet])))
             
             self.learningHistory.append(currentLearningRound)
                         
@@ -333,9 +333,10 @@ class FeatureSubsetSelection(object):
             
             stayInLoop =  not (self.abortLearning(currentLearningRound, oldRoundError))
         # End While
-        print ("Learning History size = {0}".format(len(self.learningHistory)))
-        for tmpSubset in self.learningHistory:
-            print("{0}".format(str([x.name for x in tmpSubset.featureSet])))
+#        print ("Learning History size = {0}".format(len(self.learningHistory)))
+#        for tmpSubset in self.learningHistory:
+#            print("{0}".format(str([x.name for x in tmpSubset.featureSet])))
+            
         self.updateInfluenceModel()
 
     def copyCombinationFeatures(self, oldFeatureList):
@@ -601,12 +602,12 @@ class FeatureSubsetSelection(object):
         The error depending on the configured loss function (e.g., relative, least squares, absolute), and the relative error.         
         """
         if self.ML_Settings.crossValidation:
-            print("Computing Validation Error")
+#            print("Computing Validation Error")
             return self.computeValidationError(currentModel)
         else:
-            print("Computing Learning Error")        
+#            print("Computing Learning Error")        
             tmpMainErrorLearning, tmpRelativeErrorLearning = self.computeLearningError(currentModel)
-            print("tmpMainErrorLearning={0} , tmpRelativeErrorLearning={1}".format(tmpMainErrorLearning, tmpRelativeErrorLearning))
+#            print("tmpMainErrorLearning={0} , tmpRelativeErrorLearning={1}".format(tmpMainErrorLearning, tmpRelativeErrorLearning))
             
             tmpMainErrorValidation, tmpRelativeErrorValidation = self.computeValidationError(currentModel)
 
@@ -632,11 +633,11 @@ class FeatureSubsetSelection(object):
         relativeError = 0
         skips = 0
         
-        print("Computing Error for {0} configurations".format(len(configs)))
+#        print("Computing Error for {0} configurations".format(len(configs)))
         for eachConfiguration in configs:
 
             estimatedValue = self.estimate(currentModel, eachConfiguration)
-            print("Estimated Value = {0}".format(estimatedValue))
+#            print("Estimated Value = {0}".format(estimatedValue))
             
             realValue = eachConfiguration.getNfpValue()
             
