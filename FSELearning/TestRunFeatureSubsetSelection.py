@@ -43,6 +43,15 @@ import InfluenceModels
 import FeatureSubsetSelection
 
 if __name__ == "__main__":
+    """
+    Checks that learning works on a toy example consisting of 8 features.    
+    
+    Learnt model should be:
+        root, --- 40
+        ref_1 and 60
+        deblock   -20
+    """
+    
     vmX264 = VariabilityModel.generateX264VariabilityModel()
     
     print ("{0} options by default. ".format(len(vmX264.binaryOptions)))
@@ -67,7 +76,7 @@ if __name__ == "__main__":
     
     tmpSubsetSelection.setValidationSet(lstLearningX264)
     
-    tmpSubsetSelection.learn()
+    tmpSubsetSelection.learn()    
     
     print("Learned Succeded --- kind of.")
     
