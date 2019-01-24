@@ -5,7 +5,7 @@ Created on Thu Jan 10 13:42:15 2019
 
 @author: rafaelolaechea
 """
-
+import BinaryOption
 from collections import deque
 
 
@@ -102,15 +102,22 @@ class InfluenceFunction(object):
         if (len(self.expressionArray) == 0):
             return 1.0
         
+#        print("Will execute loop for {0} in  _evaluationOfRPN".format(str(self.expressionArray)))
+
+        dblStack = [] # Fixed, before I  had dblStack inside loop.
+
         while (counter < len(self.expressionArray) ):
             curr = self.expressionArray[counter]
+#            print("Processing {0}".format(curr))
             counter = counter + 1
             
-            dblStack = []
             
-            if (not (self.isOperatorEval(curr))):
-                dblStack.append(self.getValueOfToken(config, curr, self.varModel))
+            
+            if (not (self._isOperatorEval(curr))):
+#                print("\t\tAppending curr = {0} to dbldblStack as its not isOperatorEval".format(curr))
+                dblStack.append(self._getValueOfToken(config, curr, self.varModel))
             else:
+#                print("\t\t processing curr = {0} that returned isOperatorEval(curr) == true".format(curr))
                 if curr == "+":
                         rightHandSide = dblStack.pop()
                         if (len(dblStack) == 0):
@@ -163,7 +170,7 @@ class InfluenceFunction(object):
         
         TODO
         """
-        pass
+        print ("Parsing Expression {0}".format(expression))
     
         strQueue = deque([])
         strStack = []
@@ -306,11 +313,35 @@ class InfluenceFunction(object):
         
         return False
     
+    
+    def _isOperatorEval(self, token):
+        """
+        Check if token corresponds to an 'eval' operator  
+        
+        Paramters
+        ---------
+        token : string
+        """
+        token = token.strip()
 
+        if (token == "+"):
+            return True
+
+        if (token == "*"):
+            return True
+
+        if (token == "]"):
+            return True
+
+        return False
         
     def _isOperator(self, token):
         """
         Check if token corresponds to an operator (*, or  +)
+
+        Paramters
+        ---------
+        token : string        
         """
         token = token.strip()
             
@@ -322,6 +353,43 @@ class InfluenceFunction(object):
     
         return False
     
+    def _getValueOfToken(self, config, token, theVarModel):
+        """
+        Computes the value of given token
+        Paramters
+        ---------
+        config: Configuration
+        token: string
+        theVarModel : Variability Model             
+        """       
+
+
+        token = token.strip()
+        
+        try:
+            tmpVal = float(token)
+            return tmpVal
+        except ValueError:
+            pass
+        
+
+        tmpBinOption = theVarModel.getBinaryOption(token)
+        
+        if (not (tmpBinOption==None)):
+             if(token == "base"): # don't really know why --- presume dead code from SVEN's.
+                 return 1.0
+             
+             if (tmpBinOption in config.dctBinaryOptionValues.keys() and \
+                 config.dctBinaryOptionValues[tmpBinOption] == BinaryOption.BINARY_VALUE_SELECTED):
+                 return 1.0
+             else:
+                 for aBinOption in config.dctBinaryOptionValues.keys():
+                     if(aBinOption.name == tmpBinOption.name):
+                         return 1.0
+
+        # Otherwise return 0.0        
+        return 0.0
+    
     def ToString(self):
         """
         Represent a --Feature Wrapper / Influence function -- as a string.
@@ -331,3 +399,20 @@ class InfluenceFunction(object):
         tmpRet = self.wellFormedExpression
         
         return tmpRet
+    
+    def getStringRepresentation(self):
+
+        return self.ToString()
+    
+
+    def _operatorHasGreaterPrecedence(self, thisToken,  otherToken):
+
+        thisToken = thisToken.strip()
+        
+        otherToken = otherToken.split()
+
+        if thisToken == "*" and otherToken == "+":
+            return True
+        else:
+            return False
+        

@@ -32,13 +32,19 @@ class FeatureWrapper(InfluenceFunction):
         self.Constant = 0         
         super(FeatureWrapper, self).__init__(self.name, VariabilityModel)
         
+    
     def evalOnConfiguration(self, aConfiguration):
         """
         Report the value of the feature in aConfiguration.
         
-        TODO -- Recurse until evaluating binary values.
+        Wrapper of parent eval for readability / testing.
+        
         """
-        pass
+#        print ("Have to evaluate value of {0} in {1}".format(self.name, aConfiguration.identifier))
+        evalOnConfigurationTmp = super(FeatureWrapper, self).evaluate(aConfiguration)
+#        print("\t\t Received value {0}\n".format(evalOnConfigurationTmp))
+        return evalOnConfigurationTmp
+    
     
     def isRoot(self):
         return self.name == "root"    

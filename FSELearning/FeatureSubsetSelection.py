@@ -34,7 +34,7 @@ class FeatureSubsetSelection(object):
             The influence model which will later hold all determined influences and contains the variability model from which we derive all configuration options.
         """
         self.infModel = infModel
-        self.MLSettings = tmpMLSettings
+        self.ML_Settings = tmpMLSettings
         
         self.learningHistory = []
         self.hierachyLevel = 1
@@ -105,6 +105,7 @@ class FeatureSubsetSelection(object):
                 bestRound = LRound
         
         #  Update dictionaries InteractionInfluence and BinaryOptionsInfluence in Influence model.
+        print("Updating Influence model on bestRoundFeature = {0}".format(str([(x.ToString(), x.Constant) for x in bestRound.featureSet])))
         for f in bestRound.featureSet:
             if len(f.participatingBoolOptions) == 1 and f.getNumberOfParticipatingOptions() == 1:
                 # Single Boolean Influence
@@ -169,7 +170,7 @@ class FeatureSubsetSelection(object):
             
             errorOfModel, temp = self.computeModelError(newModel)
 
-            dctErrorOfFeature.append(aCandidateFeature, temp)
+            dctErrorOfFeature[aCandidateFeature] = temp
             
             if errorOfModel < minimalRoundError:                
                     minimalRoundError = errorOfModel
@@ -235,9 +236,9 @@ class FeatureSubsetSelection(object):
     
         for aFeature in currentModel:
             # Do not generate interactions beyond desired feature size.
-            #    if (this.MLSettings.limitFeatureSize && (feature.getNumberOfParticipatingOptions() == this.MLSettings.featureSizeTrehold))
+            #    if (this.ML_Settings.limitFeatureSize && (feature.getNumberOfParticipatingOptions() == this.ML_Settings.featureSizeTrehold))
             #        continue;
-            if self.MLSettings.limitFeatureSize and (aFeature.getNumberOfParticipatingOptions() == self.MLSettings.featureSizeTrehold):
+            if self.ML_Settings.limitFeatureSize and (aFeature.getNumberOfParticipatingOptions() == self.ML_Settings.featureSizeTrehold):
                 continue
             
             # Exclude interactions with the root option and interactions of a binart feature with itself.       
@@ -312,7 +313,7 @@ class FeatureSubsetSelection(object):
             
             self.learningHistory.append(currentLearningRound)
                         
-            if self.MLSettings.useBackward:
+            if self.ML_Settings.useBackward:
                 
                 currentLearningRound = self.performBackwardStep(currentLearningRound)
                 
@@ -321,6 +322,7 @@ class FeatureSubsetSelection(object):
             
             stayInLoop =  not (self.abortLearning(currentLearningRound, oldRoundError))
         # End While
+        print ("Learning History size = {0}".format(len(self.learningHistory)))
         self.updateInfluenceModel()
 
     def copyCombinationFeatures(self, oldFeatureList):
@@ -375,9 +377,9 @@ class FeatureSubsetSelection(object):
         # This is done by transposing columns representing values of each feature across the learning set.        
         rowsOfFeatureValueList = []
         for eachFeature in newModel:
-            print ("Creating a tmpFeatureColumn for feature {0}".format(eachFeature.name))
+#            print ("Creating a tmpFeatureColumn for feature {0}".format(eachFeature.name))
             tmpFeatureColumn = self.createSingleFeatureValuesList(eachFeature)
-            print("Received tmpFeatureColumn = {0}".format(str( tmpFeatureColumn)))
+#            print("Received tmpFeatureColumn = {0}".format(str( tmpFeatureColumn)))
             rowsOfFeatureValueList.append(tmpFeatureColumn)
             
         rowsOfFeatureValueList = np.array(rowsOfFeatureValueList).T.tolist()            
@@ -500,9 +502,9 @@ class FeatureSubsetSelection(object):
                 return true;
             if (abortDueError(current))
                 return true;
-            if (current.validationError + this.MLSettings.minImprovementPerRound > oldRoundError)
+            if (current.validationError + this.ML_Settings.minImprovementPerRound > oldRoundError)
             {
-                if (this.MLSettings.withHierarchy)
+                if (this.ML_Settings.withHierarchy)
                 {
                     hierachyLevel++;
                     return false;
@@ -512,7 +514,7 @@ class FeatureSubsetSelection(object):
             }
             return false;
         """
-        if (currentLearningRound.round >= self.MLSettings.numberOfRounds):
+        if (currentLearningRound.roundNum >= self.ML_Settings.numberOfRounds):
                 return True
         return False
 
@@ -583,7 +585,7 @@ class FeatureSubsetSelection(object):
         -------
         The error depending on the configured loss function (e.g., relative, least squares, absolute), and the relative error.         
         """
-        if self.MLSettings.crossValidation:
+        if self.ML_Settings.crossValidation:
             return self.computeValidationError(currentModel)
         else:
         
@@ -616,7 +618,7 @@ class FeatureSubsetSelection(object):
         for eachConfiguration in configs:
             estimatedValue = self.estimate(currentModel, eachConfiguration)
             
-            realValue = eachConfiguration.GetNFPValue()
+            realValue = eachConfiguration.getNfpValue()
             
             if (realValue < 1):
                 # Ignore cases where real value is close to zero.
@@ -630,18 +632,18 @@ class FeatureSubsetSelection(object):
             
             error = 0
             
-            if self.ML_Settings.LossFunction == mlsettings.RELATIVE:
+            if self.ML_Settings.lossFunction == MLSettings.RELATIVE:
                 if (realValue < 1):
                     # following sven
                     error = abs(((2 * (realValue - estimatedValue) / (realValue + estimatedValue)) - 1) * 100)
                 else:
                     error = abs(100 - ((estimatedValue * 100) / realValue))
                     
-            elif  self.ML_Settings.LossFunction == mlsettings.LEASTSQUARES:
+            elif  self.ML_Settings.lossFunction == MLSettings.LEASTSQUARES:
                 
                 error = math.pow(realValue - estimatedValue, 2)                
                 
-            elif self.ML_Settings.LossFunction == mlsettings.ABSOLUTE:
+            elif self.ML_Settings.lossFunction == MLSettings.ABSOLUTE:
 
                 error = abs(realValue - estimatedValue)
                 
@@ -675,15 +677,15 @@ class FeatureSubsetSelection(object):
 #        print("theFeature " + str(theFeature))
         if theFeature in self.DM_columnsCache.keys():            
             # Return soted column vector             
-            print(" The feature {0} is  in cache ".format(theFeature.name))
+#            print(" The feature {0} is  in cache ".format(theFeature.name))
             return self.DM_columnsCache[theFeature]
 
         else:
-            print(" The feature {0} not in cache ".format(theFeature.name))
+#            print(" The feature {0} not in cache ".format(theFeature.name))
             # Create column vector and store in cache. 
             columnVector = [0 for x in range(len(self.learningSet))]
             
-            print("ColumnVector set to {0}".format(str(columnVector)))
+#            print("ColumnVector set to {0}".format(str(columnVector)))
             
             i = 0
             for eachConfiguration in self.learningSet:
@@ -760,7 +762,7 @@ class FeatureSubsetSelection(object):
                     
                     error, relativeError = self.computeModelError(tempSet)
                     
-                    if ( (error - self.MLSettings.backwardErrorDelta) < current.validationError and error < roundError):
+                    if ( (error - self.ML_Settings.backwardErrorDelta) < current.validationError and error < roundError):
                         roundError = error
                         toRemove = deletionCandidate                        
                     
