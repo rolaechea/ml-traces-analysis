@@ -5,6 +5,7 @@ Created on Wed Jan  9 17:33:15 2019
 
 @author: rafaelolaechea
 """
+import sys
 import math
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -105,7 +106,7 @@ class FeatureSubsetSelection(object):
                 bestRound = LRound
         
         #  Update dictionaries InteractionInfluence and BinaryOptionsInfluence in Influence model.
-        print("Updating Influence model on bestRoundFeature = {0}".format(str([(x.ToString(), x.Constant) for x in bestRound.featureSet])))
+#        print("Updating Influence model on bestRoundFeature = {0}".format(str([(x.ToString(), x.Constant) for x in bestRound.featureSet])))
         for f in bestRound.featureSet:
             if len(f.participatingBoolOptions) == 1 and f.getNumberOfParticipatingOptions() == 1:
                 # Single Boolean Influence
@@ -165,7 +166,7 @@ class FeatureSubsetSelection(object):
             if (aCandidateFeature in dctErrorOfFeature.keys()):
                 continue
             
-            newModel = self.copyCombinationFeatures(currentLearningRound.featureSet)
+            newModel = self._copyCombinationFeatures(currentLearningRound.featureSet)
             newModel.append(aCandidateFeature)
         
             if (not self.fitModel(newModel)):
@@ -326,7 +327,7 @@ class FeatureSubsetSelection(object):
                         
             if self.ML_Settings.useBackward:
                 
-                currentLearningRound = self.performBackwardStep(currentLearningRound)
+                currentLearningRound = self._performBackwardStep(currentLearningRound)
                 
                 self.learningHistory.append(currentLearningRound)
 
@@ -339,7 +340,7 @@ class FeatureSubsetSelection(object):
             
         self.updateInfluenceModel()
 
-    def copyCombinationFeatures(self, oldFeatureList):
+    def _copyCombinationFeatures(self, oldFeatureList):
         """
         This method creates new list of newly created feature objects.
         
@@ -353,13 +354,25 @@ class FeatureSubsetSelection(object):
         Returns
         -------
         A  list of newly created FeatureWrapper objects
+        
+        Notes
+        -----
+        
+        Copy combination had error that it set Constant to zero. Affected backward feature selection -- fixed in e839aa93d475b77142cd23f91c00e775cfc710a2.
+        
+        Backported fix from 
+            nsiegmun committed on Nov 17, 2015 1 parent 2041999 commit e839aa93d475b77142cd23f91c00e775cfc710a2
         """
         resultList = []
         if oldFeatureList == []:
-            return resultList
-        
+            return resultList        
+
         for aFeatureSubset in oldFeatureList:
-             resultList.append(FeatureWrapper(aFeatureSubset.ToString(), aFeatureSubset.getVariabilityModel()))   
+             #print("Copying aFeatureSubset {0} - {1}, input string = {2}".format(aFeatureSubset.name, aFeatureSubset.Constant, aFeatureSubset.ToString()))
+             tmpFeatureWrapper = FeatureWrapper(aFeatureSubset.ToString(), aFeatureSubset.getVariabilityModel())
+             tmpFeatureWrapper.Constant = aFeatureSubset.Constant
+             #print("Got aFeatureSubset {0} - {1}\n\n".format(tmpFeatureWrapper.name, tmpFeatureWrapper.Constant))
+             resultList.append(tmpFeatureWrapper)   
             
         return resultList
         
@@ -509,29 +522,17 @@ class FeatureSubsetSelection(object):
         Parameters
         ----------
         currentLearningRound : LearningRound.        
-
-        
-        NOTES
-        -----
-            TimeSpan diff = DateTime.Now - this.startTime;
-            if (current.round > 30 && diff.Minutes > 60)
-                return true;
-            if (abortDueError(current))
-                return true;
-            if (current.validationError + this.ML_Settings.minImprovementPerRound > oldRoundError)
-            {
-                if (this.ML_Settings.withHierarchy)
-                {
-                    hierachyLevel++;
-                    return false;
-                }
-                else
-                    return true;
-            }
-            return false;
+        oldRoundError: float
         """
         if (currentLearningRound.roundNum >= self.ML_Settings.numberOfRounds):
                 return True
+
+        if (self._abortDueError(currentLearningRound)):
+            return True
+        
+        if (currentLearningRound.validationError + self.ML_Settings.minImprovementPerRound     > oldRoundError ):
+            return True
+        
         return False
 
     def estimate(self, currentModel, aConfiguration):
@@ -753,7 +754,7 @@ class FeatureSubsetSelection(object):
 
             i = i - 1
    
-    def performBackwardStep(self, current):
+    def _performBackwardStep(self, current):
         """
         Removes already learned features from the model if they have only a small impact on the prediction accuracy. 
         
@@ -762,36 +763,77 @@ class FeatureSubsetSelection(object):
         Parameters
         ----------
         current: LearningRound
-        The current learning round that we will attemp to simplify.
+        The current learning round that we will attempt to simplify.
         
         Returns
         -------
-        A new model that might be smaller than the original one and might have a slightly worse prediction accuracy.        
+        A new model that might be smaller than the original one and might have a slightly worse prediction accuracy.    
+        
+        
+        Identified bug in _performBackwardStep that caused infinite loop when set to true.
+        Error later fixed by SergiyKolesnikov committed on Apr 13, 2016
+1 parent 1c87802 commit. We backported the fix.
+
+        
         """
         if (current.roundNum < 3 or len(current.featureSet) < 2):
             return current
         
         abort = False
-        tmpFeatureSet = self.copyCombination(current.featureSet);
+        
+        lstTmpFeatureSet = self._copyCombinationFeatures(current.featureSet);
+        
+
+        
+        previousRoundlstTmpFeatureSetSize = len(lstTmpFeatureSet)
+        
+        previousReducedModelValidationError_relative = current.validationError_relative
+        previousReducedModelValidationError = current.validationError
+                
         while(not abort):
                 roundError = float("inf")
                 toRemove = None
         
-                for deletionCandidate in tmpFeatureSet:
-                    tempSet = self.copyCombination(tmpFeatureSet);
+                for deletionCandidate in lstTmpFeatureSet:
+                    tempSet = self._copyCombinationFeatures(lstTmpFeatureSet);
+#                    print("Testing a a deletion of TmpSet before deletion has size {0}, deleting {1}".format(\#
+#                          len(tempSet), deletionCandidate.name))
                     tempSet.remove(deletionCandidate)
+#                    print("Testing a deletion of TmpSet after deletion has size {0}".format(len(tempSet)))                    
+                    
                     
                     error, relativeError = self.computeModelError(tempSet)
                     
                     if ( (error - self.ML_Settings.backwardErrorDelta) < current.validationError and error < roundError):
                         roundError = error
-                        toRemove = deletionCandidate                        
-                    
-                if not (toRemove == None):
-                    tmpFeatureSet.remove(toRemove)
-                    
-                if len(tmpFeatureSet)<= 2:
-                    abort = True
+                        toRemove = deletionCandidate     
                         
-        current.featureSet = tmpFeatureSet
+                        previousReducedModelValidationError_relative = relativeError
+                        previousReducedModelValidationError = error
+                 
+#                print("ToRemove = {0}".format(str(toRemove)))
+                
+                if not (toRemove == None):
+#                    print("Executed deletion")
+                    lstTmpFeatureSet.remove(toRemove)
+#                else:
+#                    print("Skipped deletion")
+                    
+                if len(lstTmpFeatureSet) <= 2 or len(lstTmpFeatureSet)==previousRoundlstTmpFeatureSetSize:
+                    abort = True
+                    
+#                print("\n")
+                previousRoundlstTmpFeatureSetSize = len(lstTmpFeatureSet)
+                
+        current.featureSet = lstTmpFeatureSet
+        current.validationError_relative = previousReducedModelValidationError_relative
+        current.validationError = previousReducedModelValidationError
+       
         return current
+    
+    
+    def _abortDueError(self, currentLearningRound):
+        """
+        Decides whether we should abourt due to an error.
+        """
+        return False    

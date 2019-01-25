@@ -159,14 +159,14 @@ if __name__ == "__main__":
 
     TmpMLSettings = MLSettings.MLSettings()
     
-    TmpMLSettings.useBackward = False
+    TmpMLSettings.useBackward = True
     
     TmpMLSettings.numberOfRounds = 10
     
     tmpSubsetSelection =    FeatureSubsetSelection.FeatureSubsetSelection(InfModelX264, TmpMLSettings)
     
-    print("Feature subset selection sent as initial features {0}".format( str([x.name for x in tmpSubsetSelection.initialFeatures])))
-    print("Feature subset selection sent as strictly mandatory features {0}".format( str([x.name for x in tmpSubsetSelection.strictlyMandatoryFeatures])))
+#    print("Feature subset selection sent as initial features {0}".format( str([x.name for x in tmpSubsetSelection.initialFeatures])))
+#    print("Feature subset selection sent as strictly mandatory features {0}".format( str([x.name for x in tmpSubsetSelection.strictlyMandatoryFeatures])))
     
     # Correct testing.
     lstLearningX264, lstValidationX264 = generateLearningAndValidationSetX264(vmX264)
@@ -200,11 +200,12 @@ if __name__ == "__main__":
         if foundCurrentDesiredItem == False:
             TestPassed = False
     if TestPassed:
-        print("Test Passed. Identified Correct Constant Values")
+        print("Test Passed. Identified Correct Constant Values:")
     else:
-        print("Test Fao;ed. Identified Incorrect Constant Values")
-        mapBinaries = [(x.name,y.Constant) for x,y in tmpSubsetSelection.infModel.binaryOptionsInfluence.items()]
-        print (mapBinaries)
+        print("Test Failed. Identified Incorrect Constant Values:")
+    
+    mapBinaries = [(x.name,y.Constant) for x,y in tmpSubsetSelection.infModel.binaryOptionsInfluence.items()]
+    print (mapBinaries)
 #    print("Interactions")
 #    print([[y.name for y in x.binaryOptions] for x in tmpSubsetSelection.infModel.interactionInfluence])
     
