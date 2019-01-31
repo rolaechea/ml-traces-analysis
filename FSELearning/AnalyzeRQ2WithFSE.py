@@ -11,16 +11,17 @@ import sys
 
 
 # Current hack until sorting out proper imports.
-sys.path.append("/Users/rafaelolaechea/phd-work/Section 3 - Learning/AnalyzeTracesCodebase/")
+#sys.path.append("/Users/rafaelolaechea/phd-work/Section 3 - Learning/AnalyzeTracesCodebase/")
 
-import InfluenceModels, MLSettings
-import FeatureSubsetSelection
 
 import MLConstants
-from VariabilityModelUtilities import generateFullX264VariabilityModel
+
 from pickleFacade import loadObjectFromPickle
 
 
+from FSELearning import InfluenceModels, MLSettings
+from FSELearning  import FeatureSubsetSelection
+from FSELearning.VariabilityModelUtilities import generateFullX264VariabilityModel
 
 
 
@@ -28,7 +29,7 @@ MIN_NUM_ARGUMENTS = 4
 
 def print_help():
     print("AnalyzeRQ2WithFSE.py -- reimplments FSE paper of Sven Apel to compare answers for RQ2")
-    print("Incorrect Arguments -- requires X arguments")
+    print("Incorrect Arguments -- requires {0} arguments".format(MIN_NUM_ARGUMENTS))
     
 def parseRuntimeParemeters(inputParameters):
     """
@@ -95,7 +96,8 @@ def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutio
 
     print (len(traceExecutionTimesSummaries))
 
-    print (traceExecutionTimesSummaries))
+    print (len(traceExecutionTimesSummaries))
+    
     for repId in range(1, 11):
         
         print (len(traceExecutionTimesSummaries[(repId-1)*10: repId*10]))
