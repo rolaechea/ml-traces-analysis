@@ -6,7 +6,7 @@ Created on Wed Jan  9 17:34:38 2019
 @author: rafaelolaechea
 """
 
-from InfluenceFunction import InfluenceFunction
+from FSELearning.InfluenceFunction import InfluenceFunction
 
 class FeatureWrapper(InfluenceFunction):
     """

@@ -31,28 +31,20 @@ currentModel == CURRENT
 
 
 """
-
-
-
-    
-import MLSettings
-import VariabilityModel
-import InfluenceModels
-import Configuration
-import BinaryOption
-#import FeatureWrapper
-import FeatureSubsetSelection
 import random
 
+    
+from  FSELearning import MLSettings
+from  FSELearning import  VariabilityModel
+from  FSELearning import InfluenceModels
+from  FSELearning import Configuration
+from  FSELearning import BinaryOption
+from  FSELearning import FeatureSubsetSelection
 
-def createChildOption(varMod, optionName):
-    binOp1 =  BinaryOption.BinaryOption(varMod, optionName)
-    
-    binOp1.optional = True
-   
-    binOp1.defaultValue = BinaryOption.BINARY_VALUE_DESELECTED
-    
-    varMod.addConfigurationOption(binOp1)
+
+from FSELearning.VariabilityModelUtilities import createChildOption
+
+
     
 
 # Test that generate Candidates is working properly.

@@ -5,7 +5,7 @@ Created on Thu Jan 10 16:56:26 2019
 
 @author: rafaelolaechea
 """
-import BinaryOption
+from . import BinaryOption
 
 class Configuration(object):    
     def __init__(self, binarySelection, measuremement):

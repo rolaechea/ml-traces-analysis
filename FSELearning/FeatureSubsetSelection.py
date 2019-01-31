@@ -10,10 +10,10 @@ import math
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-from FeatureWrapper import FeatureWrapper
-from LearningRound import LearningRound
-from Interaction import Interaction
-import MLSettings
+from .FeatureWrapper import FeatureWrapper
+from .LearningRound import LearningRound
+from .Interaction import Interaction
+from . import MLSettings
 
 
 

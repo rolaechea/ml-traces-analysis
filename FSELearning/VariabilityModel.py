@@ -5,8 +5,8 @@ Created on Thu Jan 10 15:41:13 2019
 
 @author: rafaelolaechea
 """
-import BinaryOption
-import Configuration
+from FSELearning import BinaryOption
+from FSELearning import Configuration
 import random
 #from BinaryOption. BinaryOption import BinaryOption. BinaryOption
 

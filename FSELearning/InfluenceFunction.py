@@ -5,7 +5,7 @@ Created on Thu Jan 10 13:42:15 2019
 
 @author: rafaelolaechea
 """
-import BinaryOption
+from FSELearning import BinaryOption
 from collections import deque
 
 
