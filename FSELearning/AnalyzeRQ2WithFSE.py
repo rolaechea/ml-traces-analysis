@@ -21,9 +21,12 @@ from pickleFacade import loadObjectFromPickle
 
 from FSELearning import InfluenceModels, MLSettings
 from FSELearning  import FeatureSubsetSelection
-from FSELearning.VariabilityModelUtilities import generateFullX264VariabilityModel
+from FSELearning.VariabilityModelUtilities import generateFullX264VariabilityModel, transformSingleConfigurationToX264FSE
 
+from ConfigurationUtilities import generateBitsetForOneConfiguration
 
+X264_RANGE_START = 1
+X264_RANGE_END = 11
 
 MIN_NUM_ARGUMENTS = 4
 
@@ -70,15 +73,28 @@ def parseRuntimeParemeters(inputParameters):
     return SubjectSystem,   trainConfFilename, testConfFilename, traceSummarizedTimes
 
 
-def transformToFSEFormat(lstConfIds):
+def transformToFSEFormat(lstConfIds, vm):
     """
     Transform a listin of configurations ids from the bitmap format to the FSE format.
     
     Parameters:
     -----------
-    lstConfIds : List of integer ids.        
+    lstConfIds : List of integer ids.      
+    
+    Returns
+    -------
+    List of Equivalent X264 Configurations.
+    
     """
-    return []
+#    print ("lstConfIds Transforming {0}".format(str(lstConfIds[0:5])))
+
+    lstTransformedList = []
+    for xConfiguration in lstConfIds:#[0:5]:
+        bitsetConf = generateBitsetForOneConfiguration(xConfiguration)
+        #print("{0} :  {1}".format(xConfiguration, bitsetConf))
+        lstTransformedList.append(transformSingleConfigurationToX264FSE(xConfiguration, bitsetConf, vm))
+        
+    return lstTransformedList
 
 
 def loadResults(lstTransformedConfigurations, lstOriginalConfsIds, dctConfIdToResult):
@@ -89,29 +105,44 @@ def loadResults(lstTransformedConfigurations, lstOriginalConfsIds, dctConfIdToRe
 def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutionTimesSummaries):
     """
     Analyze x264 executions using FSE paper.
+
+    Parameters
+    -----------
+    traceExecutionTimesSummaries : Dictionary
+    Maps tuples (confId, repetitionId) to execution time (microseconds)       
+
+    trainConfigurationList : List of integers    
+    testConfigurationsList : List of integers
     """
     
+    dctTraceExecutedTimesKeys = [x for x in traceExecutionTimesSummaries.keys()]
      
-    print(str(trainConfigurationList))
-
-    print (len(traceExecutionTimesSummaries))
-
-    print (len(traceExecutionTimesSummaries))
-    
-    for repId in range(1, 11):
-        
-        print (len(traceExecutionTimesSummaries[(repId-1)*10: repId*10]))
-    exit(0)
-    
     vmX264 = generateFullX264VariabilityModel()
-    
-    lstFSETrainConfigurationListing = transformToFSEFormat(trainConfigurationList)
 
     InfModelX264 = InfluenceModels.InfluenceModel(vmX264)
-
+      
     TmpMLSettings = MLSettings.MLSettings()
     
     TmpMLSettings.useBackward = True
+    
+    lstFSETrainConfigurationListing = transformToFSEFormat(trainConfigurationList, vmX264)
+
+
+    # Set average values for each configuration
+    indexOffset = 0    
+    for configurationId in trainConfigurationList:
+        sumTimes = 0.0
+        for repId in range(X264_RANGE_START, X264_RANGE_END):
+            sumTimes +=     traceExecutionTimesSummaries[(configurationId, repId)]
+        averageTimes = sumTimes / (X264_RANGE_END-X264_RANGE_START)
+        lstFSETrainConfigurationListing[indexOffset].setNfpValue(averageTimes)
+        indexOffset += 1
+
+#    print (lstFSETrainConfigurationListing[0].getNfpValue())
+#    for repId in range(X264_RANGE_START, X264_RANGE_END):
+#        print (traceExecutionTimesSummaries[(trainConfigurationList[0], repId)])
+#    #print(lstFSETrainConfigurationListing)
+    
     
     tmpSubsetSelection =    FeatureSubsetSelection.FeatureSubsetSelection(InfModelX264, TmpMLSettings)
     
@@ -119,11 +150,17 @@ def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutio
     
     tmpSubsetSelection.setValidationSet(lstFSETrainConfigurationListing)
                                          # Following FSE paper, Learning set is resued as 'validation set'.
-    print("Performing Learning")
-    
+
     tmpSubsetSelection.learn()    
     
     print("Completed Learning")
+
+    mapBinaries = [(x.name,y.Constant) for x,y in tmpSubsetSelection.infModel.binaryOptionsInfluence.items()]
+    print (mapBinaries)
+
+    mapInfluence = [([z.name for z in x.binaryOptions],y.Constant) for x,y in tmpSubsetSelection.infModel.interactionInfluence.items()]
+    print (mapInfluence)
+
     
 if __name__ == "__main__":
     """

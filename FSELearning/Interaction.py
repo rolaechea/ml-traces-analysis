@@ -173,7 +173,7 @@ namespace SPLConqueror_Core
 
 class Interaction(object):
     """
-    TODO implement interactin object
+    TODO implement interaction object
     """
     def __init__(self, InfluenceFunctionModellingInteraction):
         """

@@ -49,7 +49,7 @@ from FSELearning.VariabilityModelUtilities import createChildOption
 
 # Test that generate Candidates is working properly.
     
-def generateX264VariabilityModel():
+def generateX264VariabilityModelForTest():
     """
     Hard code generation of X264 Var model.
     
@@ -97,7 +97,7 @@ def generateLearningAndValidationSetX264(vmX264):
     for i in range(1,4):
         for j in range(1,4):
             for k in range(0,2):
-                refOptionToUse = vmX264.getBinaryOption("ref_" + str(i))
+                        refOptionToUse = vmX264.getBinaryOption("ref_" + str(i))
                 bframeOptionToUse = vmX264.getBinaryOption("bframes_" + str(j))
                 if k == 0:
                     useDeblockOption = True
@@ -143,7 +143,7 @@ if __name__ == "__main__":
         deblock   -20
     """
     
-    vmX264 = generateX264VariabilityModel()
+    vmX264 = generateX264VariabilityModelForTest()
     
     print ("{0} options by default. ".format(len(vmX264.binaryOptions)))
     
