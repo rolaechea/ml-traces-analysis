@@ -8,14 +8,15 @@ Created on Fri Jan 25 15:59:49 2019
 Analyze RQ2 for X264 -- Sven Apels Code.
 """
 import sys
-
+import numpy as np
 
 # Current hack until sorting out proper imports.
 #sys.path.append("/Users/rafaelolaechea/phd-work/Section 3 - Learning/AnalyzeTracesCodebase/")
 
 
-import MLConstants
 
+import MLConstants
+from ConfigurationUtilities import mean_absolute_error_and_stdev_eff
 from pickleFacade import loadObjectFromPickle
 
 
@@ -159,12 +160,12 @@ def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutio
     
     tmpSubsetSelection.setLearningSet(lstFSETrainConfigurationListing)
     
-    tmpSubsetSelection.setValidationSet(lstFSETrainConfigurationListing)
-                                         # Following FSE paper, Learning set is resued as 'validation set'.
-
+    tmpSubsetSelection.setValidationSet(lstFSETrainConfigurationListing)  # Following FSE paper, Learning set is resued as 'validation set'.
+                                        
     tmpSubsetSelection.learn()    
     
-    showInfluenceModel = True    
+    showInfluenceModel = False    
+    
     if showInfluenceModel:
         printInfluenceModel(tmpSubsetSelection)
     
@@ -172,32 +173,32 @@ def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutio
     
     setNFPValuesForConfigurationList(lstFSETestConfigurationListing, testConfigurationsList, traceExecutionTimesSummaries )
 
-    obtainedValuesForTestSet = [x.getNfpValue() for x in lstFSETestConfigurationListing]
+    lstMeasuredValues = [x.getNfpValue() for x in lstFSETestConfigurationListing]
 
-    estimatedValuesForTestSet = [tmpSubsetSelection.infModel.estimate(x) for x in lstFSETestConfigurationListing]
+    lstEstimatedValues = [tmpSubsetSelection.infModel.estimate(x) for x in lstFSETestConfigurationListing]
         
     
-    for indexOffset in range(5):
-        print ("Configuration {0}".format(testConfigurationsList[indexOffset]))
-        print ("Configuration wrt Options {0}".format([x.name for x in lstFSETestConfigurationListing[indexOffset].dctBinaryOptionValues.keys()]))
-        print ("Measured Value {0}".format(obtainedValuesForTestSet[indexOffset]))
-        print ("Estimated Value {0}".format(estimatedValuesForTestSet[indexOffset]))
+    showVerboseDebugging = False
+    if showVerboseDebugging:
+        for indexOffset in range(5):
+            print ("Configuration {0}".format(testConfigurationsList[indexOffset]))
+            print ("Configuration wrt Options {0}".format([x.name for x in lstFSETestConfigurationListing[indexOffset].dctBinaryOptionValues.keys()]))
+            print ("Measured Value {0}".format(lstMeasuredValues[indexOffset]))
+            print ("Estimated Value {0}".format(lstEstimatedValues[indexOffset]))
         
 
+    lstMeasuredValuesNp = np.array(lstMeasuredValues)
+    lstEstimatedValuesNp = np.array(lstEstimatedValues)
+ 
+    MAETestMean, MAETestStd = mean_absolute_error_and_stdev_eff(lstMeasuredValuesNp, lstEstimatedValuesNp)
+    MEANTestVal = np.mean(lstMeasuredValuesNp)
     
-    print(obtainedValuesForTestSet[0:5])
-    print(estimatedValuesForTestSet[0:5])
+    NormalizedMae =   100* (  MAETestMean /         MEANTestVal)
 
-
-        
-    indexOffset = 0    
-    for configurationId in trainConfigurationList:
-        sumTimes = 0.0
-        for repId in range(X264_RANGE_START, X264_RANGE_END):
-            sumTimes +=     traceExecutionTimesSummaries[(configurationId, repId)]
-        averageTimes = sumTimes / (X264_RANGE_END-X264_RANGE_START)
-        lstFSETrainConfigurationListing[indexOffset].setNfpValue(averageTimes)
-        indexOffset += 1    
+    print("MAE_TEST_MEAN, MAE_TEST_STD, MEAN_TEST, NOMRALIZED_MAE (%) ")
+    print("{0},\t {1},\t {2},\t {3}".format(MAETestMean, MAETestStd, MEANTestVal, NormalizedMae))
+    
+               
 if __name__ == "__main__":
     """
     Execute FSE paper for X264 / Autonomooose.    
