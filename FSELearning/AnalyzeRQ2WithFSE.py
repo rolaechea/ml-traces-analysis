@@ -97,10 +97,31 @@ def transformToFSEFormat(lstConfIds, vm):
     return lstTransformedList
 
 
-def loadResults(lstTransformedConfigurations, lstOriginalConfsIds, dctConfIdToResult):
+def printInfluenceModel(tmpSubsetSelection):
     """
-    Include NFP value into transformed configuration.
+    Output each feature that is part of Influence model and each interaction.
     """
+    mapBinaries = [(x.name,y.Constant) for x,y in tmpSubsetSelection.infModel.binaryOptionsInfluence.items()]
+    print (mapBinaries)
+
+    mapInfluence = [([z.name for z in x.binaryOptions],y.Constant) for x,y in tmpSubsetSelection.infModel.interactionInfluence.items()]
+    print (mapInfluence)
+        
+
+def setNFPValuesForConfigurationList(lstFSEConfigurations, lseConfigurationsIdsList, traceExecutionTimesSummaries ):
+    """
+    Sets the NFP values for a list of FSE configurations from the traceExecutionTimesSummaries and configurationIds
+    
+    No return value, operates through side-effects
+    """
+    indexOffset = 0    
+    for configurationId in lseConfigurationsIdsList:
+        sumTimes = 0.0
+        for repId in range(X264_RANGE_START, X264_RANGE_END):
+            sumTimes +=     traceExecutionTimesSummaries[(configurationId, repId)]
+        averageTimes = sumTimes / (X264_RANGE_END-X264_RANGE_START)
+        lstFSEConfigurations[indexOffset].setNfpValue(averageTimes)
+        indexOffset += 1
     
 def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutionTimesSummaries):
     """
@@ -113,10 +134,7 @@ def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutio
 
     trainConfigurationList : List of integers    
     testConfigurationsList : List of integers
-    """
-    
-    dctTraceExecutedTimesKeys = [x for x in traceExecutionTimesSummaries.keys()]
-     
+    """     
     vmX264 = generateFullX264VariabilityModel()
 
     InfModelX264 = InfluenceModels.InfluenceModel(vmX264)
@@ -129,14 +147,7 @@ def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutio
 
 
     # Set average values for each configuration
-    indexOffset = 0    
-    for configurationId in trainConfigurationList:
-        sumTimes = 0.0
-        for repId in range(X264_RANGE_START, X264_RANGE_END):
-            sumTimes +=     traceExecutionTimesSummaries[(configurationId, repId)]
-        averageTimes = sumTimes / (X264_RANGE_END-X264_RANGE_START)
-        lstFSETrainConfigurationListing[indexOffset].setNfpValue(averageTimes)
-        indexOffset += 1
+    setNFPValuesForConfigurationList(lstFSETrainConfigurationListing, trainConfigurationList, traceExecutionTimesSummaries )
 
 #    print (lstFSETrainConfigurationListing[0].getNfpValue())
 #    for repId in range(X264_RANGE_START, X264_RANGE_END):
@@ -153,15 +164,40 @@ def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutio
 
     tmpSubsetSelection.learn()    
     
-    print("Completed Learning")
+    showInfluenceModel = True    
+    if showInfluenceModel:
+        printInfluenceModel(tmpSubsetSelection)
+    
+    lstFSETestConfigurationListing = transformToFSEFormat(testConfigurationsList, vmX264)
+    
+    setNFPValuesForConfigurationList(lstFSETestConfigurationListing, testConfigurationsList, traceExecutionTimesSummaries )
 
-    mapBinaries = [(x.name,y.Constant) for x,y in tmpSubsetSelection.infModel.binaryOptionsInfluence.items()]
-    print (mapBinaries)
+    obtainedValuesForTestSet = [x.getNfpValue() for x in lstFSETestConfigurationListing]
 
-    mapInfluence = [([z.name for z in x.binaryOptions],y.Constant) for x,y in tmpSubsetSelection.infModel.interactionInfluence.items()]
-    print (mapInfluence)
+    estimatedValuesForTestSet = [tmpSubsetSelection.infModel.estimate(x) for x in lstFSETestConfigurationListing]
+        
+    
+    for indexOffset in range(5):
+        print ("Configuration {0}".format(testConfigurationsList[indexOffset]))
+        print ("Configuration wrt Options {0}".format([x.name for x in lstFSETestConfigurationListing[indexOffset].dctBinaryOptionValues.keys()]))
+        print ("Measured Value {0}".format(obtainedValuesForTestSet[indexOffset]))
+        print ("Estimated Value {0}".format(estimatedValuesForTestSet[indexOffset]))
+        
 
     
+    print(obtainedValuesForTestSet[0:5])
+    print(estimatedValuesForTestSet[0:5])
+
+
+        
+    indexOffset = 0    
+    for configurationId in trainConfigurationList:
+        sumTimes = 0.0
+        for repId in range(X264_RANGE_START, X264_RANGE_END):
+            sumTimes +=     traceExecutionTimesSummaries[(configurationId, repId)]
+        averageTimes = sumTimes / (X264_RANGE_END-X264_RANGE_START)
+        lstFSETrainConfigurationListing[indexOffset].setNfpValue(averageTimes)
+        indexOffset += 1    
 if __name__ == "__main__":
     """
     Execute FSE paper for X264 / Autonomooose.    

@@ -26,13 +26,29 @@ class InfluenceModel(object):
         
         To determine the value all the influences of all configuration options and interactions are considered.
         
-        TODO
         Parameters
         ----------
         Configuration : Configuration
         The configuration for which the estimation should be calculated                
+        
+        
+        Notes
+        -----
+        Manually tested, seems to work fine Jan. 4th 2019
         """
-        pass
+        prediction = 0.0
+
+        for keyItemBinaryOption, valItemFeatureWrapper in self.binaryOptionsInfluence.items():
+            if valItemFeatureWrapper.isValidConfig(aConfiguration):
+                prediction += valItemFeatureWrapper.evalOnConfiguration(aConfiguration) * valItemFeatureWrapper.Constant
+
+        for keyItemInfluence, valItemFeatureWrapper in self.interactionInfluence.items():
+            if valItemFeatureWrapper.isValidConfig(aConfiguration):
+                prediction += valItemFeatureWrapper.evalOnConfiguration(aConfiguration) * valItemFeatureWrapper.Constant
+        
+        return prediction
+    
+                
     
     def clearBinaryOptionsInfluence(self):
         """
