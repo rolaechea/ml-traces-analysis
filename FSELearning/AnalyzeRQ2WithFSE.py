@@ -198,7 +198,14 @@ def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutio
     print("MAE_TEST_MEAN, MAE_TEST_STD, MEAN_TEST, NOMRALIZED_MAE (%) ")
     print("{0},\t {1},\t {2},\t {3}".format(MAETestMean, MAETestStd, MEANTestVal, NormalizedMae))
     
-               
+     
+
+def analyzeAutonomooseFSE():
+    """
+    Analyze execution time of autonomooose
+    """
+    pass
+          
 if __name__ == "__main__":
     """
     Execute FSE paper for X264 / Autonomooose.    
@@ -211,14 +218,17 @@ if __name__ == "__main__":
     """
     SubjectSystem, trainConfFilename, testConfFilename, traceSummarizedTimesFilename = parseRuntimeParemeters(sys.argv)
     
-    trainConfigurationList, testConfigurationsList, traceExecutionTimesSummaries = loadObjectFromPickle(trainConfFilename), \
-        loadObjectFromPickle(testConfFilename), loadObjectFromPickle(traceSummarizedTimesFilename)
+    trainConfigurationList, testConfigurationsList = loadObjectFromPickle(trainConfFilename), \
+        loadObjectFromPickle(testConfFilename)
     
     if SubjectSystem == MLConstants.x264Name:
     
+        traceExecutionTimesSummaries =  loadObjectFromPickle(traceSummarizedTimesFilename)
+        
         analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutionTimesSummaries)
         
     else:
-        
+ 
+        analyzeAutonomooseFSE()  
         raise NotImplementedError()
         
