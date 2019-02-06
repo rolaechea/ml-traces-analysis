@@ -36,11 +36,11 @@ def summarizeTracesX264SpecialFromResults(pklOuptputFilename, baseFilenameTempla
                 
             confId, timeTaken = splitInParts[0], splitInParts[1]
             
-            if (confId, (seenConfigurations+1)) not in dctAllTracesExecutionTimes.keys():
+            if (int(confId), (seenConfigurations+1)) not in dctAllTracesExecutionTimes.keys():
                 seenConfigurations = seenConfigurations + 1
                 if showNextInserts:
                     print ("Will insert {0}--{1}".format(confId, seenConfigurations))
-                dctAllTracesExecutionTimes[(confId, seenConfigurations)] = timeTaken            
+                dctAllTracesExecutionTimes[(int(confId), seenConfigurations)] = float(timeTaken)            
                 if seenConfigurations == 10:
                     seenConfigurations = 0
                 
