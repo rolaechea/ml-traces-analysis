@@ -1,0 +1,2 @@
+in A and B , but not in C:
+[10, 16, 19, 17, 20, 32]
