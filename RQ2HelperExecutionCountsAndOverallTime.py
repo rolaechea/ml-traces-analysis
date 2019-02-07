@@ -27,11 +27,12 @@ def print_help():
     Program generates a json summary from a set of traces. 
     
     """
-    print("python RQ2HelperExecutionCountsAndOverralTime.py SubjecySystem traceSourceFolder JsonOuptutFilename")
+    print("python RQ2HelperExecutionCountsAndOverralTime.py SubjecySystem traceSourceFolder overallExecutionTime transitionCountsAndTime")
     print("SubjecySystem either autonomoose or x264")
     print("traceSourceFolder source folder where executions are stored")
     print("Filename where to store pickle summary of execution traces (overal time summary)")
     print("Filename where to store pickle summary of execution traces (per-transition count (0) and time (1)  summary)")
+    print("Optional Flag to only store per transition counts. onlyPerTransition")
     
 MIN_NUM_ARGUMENTS = 4
 
@@ -48,6 +49,8 @@ def parseRuntimeParemeters(inputParameters):
     ------    
     Parsed values as a tuple.    
     """
+    onlyPerTransition = False
+    
     if len(inputParameters ) > MIN_NUM_ARGUMENTS:
         SubjectSystem = inputParameters[1]
          
@@ -61,15 +64,18 @@ def parseRuntimeParemeters(inputParameters):
 
         pklOuptputFilename = inputParameters[3]
         
-        pklOuptputPerTransitionFilename = inputParameters[4]        
+        pklOuptputPerTransitionFilename = inputParameters[4]      
+        
+        if (len(inputParameters ) > (MIN_NUM_ARGUMENTS+1)) and inputParameters[4] == "onlyPerTransition":
+            onlyPerTransition =  True
     else:
         
         print_help()
         exit(0)
-    return SubjectSystem, TraceSourceFolder, pklOuptputFilename, pklOuptputPerTransitionFilename
+    return SubjectSystem, TraceSourceFolder, pklOuptputFilename, pklOuptputPerTransitionFilename, onlyPerTransition
 
 
-def summarizeTracesX264(pklOuptputFilename, pklOuptputPerTransitionFilename):
+def summarizeTracesX264(pklOuptputFilename, pklOuptputPerTransitionFilename, onlyPerTransition=False):
     """
     Read all traces from the source folder (already set) and summarize their overall execution time, # of counts per transition, and total time per transition.
 
@@ -81,6 +87,7 @@ def summarizeTracesX264(pklOuptputFilename, pklOuptputPerTransitionFilename):
     ----------
     pklOutput : string
     Filename where to store results.
+    onlyPerTransition: special flag to indicate not to save per trace totals 
     """
     allConfigurationsIds = range(0, 2304)
     
@@ -94,9 +101,11 @@ def summarizeTracesX264(pklOuptputFilename, pklOuptputPerTransitionFilename):
 
             dctTransitionToTimeTamekn = sumTimeTakenPerTransitionFromConfigurationAndRep(aConfId,  repetitionId)
             
-            timeTakenByTraceAddition = sum([dctTransitionToTimeTamekn[x][MLConstants.tupleTimeOffset] for x in dctTransitionToTimeTamekn.keys()])
+            if (not onlyPerTransition):
+
+                timeTakenByTraceAddition = sum([dctTransitionToTimeTamekn[x][MLConstants.tupleTimeOffset] for x in dctTransitionToTimeTamekn.keys()])
             
-            dctAllTracesExecutionTimes[(aConfId, repetitionId)] = timeTakenByTraceAddition
+                dctAllTracesExecutionTimes[(aConfId, repetitionId)] = timeTakenByTraceAddition
              
             dctConfTodctRepTodctTransitionToTimes[aConfId][repetitionId] = dctTransitionToTimeTamekn
 #            print(timeTakenByTraceAddition)
@@ -104,18 +113,21 @@ def summarizeTracesX264(pklOuptputFilename, pklOuptputPerTransitionFilename):
 #    print (dctAllTracesExecutionTimes.keys())
 #    print (dctConfTodctRepTodctTransitionToTimes.keys())
     
-    pickleFacade.saveObjectToPickleFile(pklOuptputFilename, dctAllTracesExecutionTimes)
-    pickleFacade.saveObjectToPickleFile(pklOuptputPerTransitionFilename, dctConfTodctRepTodctTransitionToTimes)
+    if (onlyPerTransition):
+        pickleFacade.saveObjectToPickleFile(pklOuptputPerTransitionFilename, dctConfTodctRepTodctTransitionToTimes)
+    else:
+        pickleFacade.saveObjectToPickleFile(pklOuptputFilename, dctAllTracesExecutionTimes)
+        pickleFacade.saveObjectToPickleFile(pklOuptputPerTransitionFilename, dctConfTodctRepTodctTransitionToTimes)
     
 if __name__ == "__main__":
-    SubjectSystem, TraceSourceFolder, pklOuptputFilename, pklOuptputPerTransitionFilename  = parseRuntimeParemeters(sys.argv)    
+    SubjectSystem, TraceSourceFolder, pklOuptputFilename, pklOuptputPerTransitionFilename, onlyPerTransition  = parseRuntimeParemeters(sys.argv)    
 
     setBaseTracesSourceFolder(TraceSourceFolder)
 
 
     if SubjectSystem == MLConstants.x264Name:
 
-        summarizeTracesX264(pklOuptputFilename, pklOuptputPerTransitionFilename)
+        summarizeTracesX264(pklOuptputFilename, pklOuptputPerTransitionFilename, onlyPerTransition)
 
     else:
         
