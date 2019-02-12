@@ -6,7 +6,10 @@ Created on Fri Feb  8 15:25:50 2019
 @author: rafaelolaechea
 """
 
+import numpy as np
+
 import argparse
+
 
 from ParseTrace import setBaseTracesSourceFolder, getFilenameFromConfigurationAndRepetition
 
@@ -24,8 +27,6 @@ def parseArguments():
     parser.add_argument("sourceFolder", help="folder from which full traces should be read")
 
     parser.add_argument("configurationId", help="configuration whose traces will be analysed")
-    
-    parser.add_argument("numberOfTraces")
     
     args = parser.parse_args()
 
@@ -172,51 +173,22 @@ if __name__ == "__main__":
         elif numberTraces <= 10000:
             numTracesToSample = 222 + int(0.0625*(numberTraces-1110))
         else:
-            numTracesToSample = 777 + +int(0.000625*(numberTraces-11110))
-#        print("Original {0} Sampled {1}".format(numberTraces, numTracesToSample))
-            
+            numTracesToSample = 777 + +int(0.000625*(numberTraces-11110))            
         
         lstPositions  = tracesPositions[aTrace]
         
-        print (numTracesToSample)
+        if len(lstPositions) > numTracesToSample:
+            #print ("Will sample {} from {}".format(numTracesToSample, len(lstPositions)))
+            chosen = np.random.choice(lstPositions, size=numTracesToSample, replace=False, )
+            #print ("chosen were {0}".format(str(chosen)))
+            #if len(lstPositions) <= 20:
+            #    print("All were {0}".format(str(lstPositions)))
+        else:
+            chosen = lstPositions
         
-#            
-#        for offset in tracesPositions[aTrace:10]:
-#                
-#            printSingleTracePerfumeFormat (collectedTimedTraces[offset], traceId)
-#                
-#            traceId = traceId + 1
-#
-#        if tracesCounts[aTrace] >= 10:
-#
-#            numTracesFromTentToHundred =  len(tracesPositions[aTrace][10:100])
-#            
-#            
-#            extraTraces = 
-#            
-#            for offset in tracesPositions[aTrace][10:]:
-#                
-#                printSingleTracePerfumeFormat (collectedTimedTraces[offset], traceId)
-#                
-#                traceId = traceId + 1
-                
+        for tracePosition in chosen:
+            printSingleTracePerfumeFormat (collectedTimedTraces[tracePosition], traceId)
+            traceId = traceId + 1
+
         
-    exit()
-    for repId in range(1, 11):
-        traceFilename = getFilenameFromConfigurationAndRepetition(configurationId, repId)
-       
-        seenTraces, tracesTimes, collectedTimedTraces, tracesPositions = extractTracesAfterReadingFrames(traceFilename)
-        
-        if repId == 1:
-            print (seenTraces)
-        if repId == 1:
-            print (tracesTimes)
-            
-        if repId == 1:
-            for i in range(10):
-                print (collectedTimedTraces[i])
-                
-            print (tracesPositions[(9,13)])
-            print (tracesPositions[(33, 5, 11, 15, 21, 18, 13)])
-            
     
