@@ -18,6 +18,7 @@ import numpy as np
 import MLConstants
 from ConfigurationUtilities import mean_absolute_error_and_stdev_eff
 from pickleFacade import loadObjectFromPickle
+from ParseTrace import setBaseTracesSourceFolder, getSingleFilenameWithAllTraces
 
 
 from FSELearning import InfluenceModels, MLSettings
@@ -200,11 +201,27 @@ def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutio
     
      
 
-def analyzeAutonomooseFSE():
+def analyzeAutonomooseFSE(trainConfigurationList, testConfigurationsList):
     """
     Analyze execution time of autonomooose
+
+    Parameters
+    -----------
+    traceExecutionTimesSummaries : Dictionary
+    Maps tuples (confId, repetitionId) to execution time (microseconds)       
+
+    trainConfigurationList : List of integers    
+    testConfigurationsList : List of integers
+    
+    Notes
+    ------
+    
+    1. Open all tracess files.
     """
-    pass
+    allTraces =    loadObjectFromPickle(getSingleFilenameWithAllTraces())
+    
+    raise NotImplementedError()
+
           
 if __name__ == "__main__":
     """
@@ -223,12 +240,15 @@ if __name__ == "__main__":
     
     if SubjectSystem == MLConstants.x264Name:
     
+
+        
         traceExecutionTimesSummaries =  loadObjectFromPickle(traceSummarizedTimesFilename)
         
         analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutionTimesSummaries)
         
     else:
- 
-        analyzeAutonomooseFSE()  
-        raise NotImplementedError()
+        setBaseTracesSourceFolder("../FullTraces/autonomooseFirst/")
+        
+        analyzeAutonomooseFSE(trainConfigurationList, testConfigurationsList)  
+
         
