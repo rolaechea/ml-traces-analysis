@@ -167,13 +167,13 @@ if __name__ == "__main__":
         if numberTraces <= 10:
             numTracesToSample = numberTraces
         elif numberTraces <= 100:
-            numTracesToSample = 10 + int(0.5*(numberTraces-10))
+            numTracesToSample = 10 + int(0.125*(numberTraces-10))
         elif numberTraces <= 1000:
-            numTracesToSample = 55 + int(0.25*(numberTraces-110))
-        elif numberTraces <= 10000:
-            numTracesToSample = 222 + int(0.0625*(numberTraces-1110))
+            numTracesToSample = 21 + int(0.025*(numberTraces-110))
+        elif numberTraces <= 10000: 
+            numTracesToSample = 45 + int(0.00225*(numberTraces-1110))
         else:
-            numTracesToSample = 777 + +int(0.000625*(numberTraces-11110))            
+            numTracesToSample = 65 + +int(0.0000625*(numberTraces-11110))            
         
         lstPositions  = tracesPositions[aTrace]
         
