@@ -219,7 +219,16 @@ def analyzeAutonomooseFSE(trainConfigurationList, testConfigurationsList):
     1. Open all tracess files.
     """
     allTraces =    loadObjectFromPickle(getSingleFilenameWithAllTraces())
+    print (len(allTraces)) # all traces is all traces for each configuration.
     
+    
+#    for aConfId in testConfigurationsList:
+#        CurrentExecutionTrace = allTraces[aConfId][1]
+#        getOverallRealTimeForASingleTraceAutonomoose(CurrentExecutionTrace, aConfId)
+#        
+#   actualExecutionTime = getOverallRealTimeForASingleTraceAutonomoose(CurrentExecutionTrace, aConfId)
+
+
     raise NotImplementedError()
 
           
@@ -239,9 +248,7 @@ if __name__ == "__main__":
         loadObjectFromPickle(testConfFilename)
     
     if SubjectSystem == MLConstants.x264Name:
-    
-
-        
+            
         traceExecutionTimesSummaries =  loadObjectFromPickle(traceSummarizedTimesFilename)
         
         analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutionTimesSummaries)
