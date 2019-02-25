@@ -195,8 +195,6 @@ def analyzeOverallExecutionTimesAutonomoose(regressorsArray, testConfigurationsL
             
             actualExecutionTime = getOverallRealTimeForASingleTraceAutonomoose(CurrentExecutionTrace, aConfId)
     
-
-        
             transitionsCounts = CurrentExecutionTrace.getPerTransitionCounts()
             
             #print(transitionsCounts)
