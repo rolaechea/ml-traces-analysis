@@ -31,6 +31,14 @@ def mean_absolute_error_and_stdev_eff(y_true, y_pred):
     
     return np.mean(tmpMAE), np.std(tmpMAE)
 
+def mean_absolute_error_and_stdev(y_true, y_pred):
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    
+    tmpMAE = np.abs(y_true - y_pred)
+    
+    return np.mean(tmpMAE), np.std(tmpMAE)
+    
+    
 def mean_absolute_error_eff(y_true, y_pred):
     """
     Requires two arrays of equal dimensions but its much faster than mean_absolute_error.
