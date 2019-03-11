@@ -23,14 +23,17 @@ from ParseTrace import setBaseTracesSourceFolder, getSingleFilenameWithAllTraces
 
 from FSELearning import InfluenceModels, MLSettings
 from FSELearning  import FeatureSubsetSelection
-from FSELearning.VariabilityModelUtilities import generateFullX264VariabilityModel, transformSingleConfigurationToX264FSE
+
+from FSELearning.VariabilityModelUtilities import generateFullX264VariabilityModel,\
+ transformSingleConfigurationToX264FSE, generateFullAutonomooseVariabilityModel, transformSingleConfigurationToAutonomooseFSE
 
 from ConfigurationUtilities import generateBitsetForOneConfiguration
+from AutonomooseTraces import generateBitsetForOneConfigurationAutonomoose, getOverallRealTimeForASingleTraceAutonomoose
 
 X264_RANGE_START = 1
 X264_RANGE_END = 11
 
-MIN_NUM_ARGUMENTS = 4
+MIN_NUM_ARGUMENTS = 3
 
 def print_help():
     print("AnalyzeRQ2WithFSE.py -- reimplments FSE paper of Sven Apel to compare answers for RQ2")
@@ -62,8 +65,8 @@ def parseRuntimeParemeters(inputParameters):
         trainConfFilename = inputParameters[2]
         
         testConfFilename = inputParameters[3]   
-            
-        traceSummarizedTimes = inputParameters[4]
+        
+        traceSummarizedTimesFilenameOrDirectoryName = inputParameters[4]
 
         
     else:    
@@ -72,10 +75,10 @@ def parseRuntimeParemeters(inputParameters):
         
         exit(0) 
         
-    return SubjectSystem,   trainConfFilename, testConfFilename, traceSummarizedTimes
+    return SubjectSystem,   trainConfFilename, testConfFilename, traceSummarizedTimesFilenameOrDirectoryName
 
 
-def transformToFSEFormat(lstConfIds, vm):
+def transformToFSEFormat(lstConfIds, vm, ConfigurationIdToBitsetTransformer=generateBitsetForOneConfiguration, BitsetToFseTransformer=transformSingleConfigurationToX264FSE):
     """
     Transform a listin of configurations ids from the bitmap format to the FSE format.
     
@@ -92,11 +95,14 @@ def transformToFSEFormat(lstConfIds, vm):
 
     lstTransformedList = []
     for xConfiguration in lstConfIds:#[0:5]:
-        bitsetConf = generateBitsetForOneConfiguration(xConfiguration)
+        bitsetConf = ConfigurationIdToBitsetTransformer(xConfiguration)
         #print("{0} :  {1}".format(xConfiguration, bitsetConf))
-        lstTransformedList.append(transformSingleConfigurationToX264FSE(xConfiguration, bitsetConf, vm))
+        lstTransformedList.append(BitsetToFseTransformer(xConfiguration, bitsetConf, vm))
         
     return lstTransformedList
+
+
+
 
 
 def printInfluenceModel(tmpSubsetSelection):
@@ -124,7 +130,27 @@ def setNFPValuesForConfigurationList(lstFSEConfigurations, lseConfigurationsIdsL
         averageTimes = sumTimes / (X264_RANGE_END-X264_RANGE_START)
         lstFSEConfigurations[indexOffset].setNfpValue(averageTimes)
         indexOffset += 1
+
+def setNFPValuesForConfigurationListAutonomoose(lstFSETrainConfigurationListing, trainConfigurationList, allTraces):
+    """
+    Clone of previous function
+    """
+    indexOffset = 0
     
+    for aConfId in trainConfigurationList:
+        sumTimes = 0.0
+        for repetitionId in range(0, 10):
+            
+            CurrentExecutionTrace = allTraces[aConfId][repetitionId]
+            
+            sumTimes = getOverallRealTimeForASingleTraceAutonomoose(CurrentExecutionTrace, aConfId)
+            
+        averageTimes = sumTimes / 10.0 
+        
+        lstFSETrainConfigurationListing[indexOffset].setNfpValue(averageTimes)
+
+        indexOffset += 1
+
 def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutionTimesSummaries):
     """
     Analyze x264 executions using FSE paper.
@@ -217,20 +243,76 @@ def analyzeAutonomooseFSE(trainConfigurationList, testConfigurationsList):
     ------
     
     1. Open all tracess files.
+    
+    BooleanOptions = [("BEHAVIOR", 4 ), \
+                      ("OCCUPANCY", 2),
+                      ("WAYPOINTS", 1)]
+
+        Behavior Planner
+        Occupancy or Mockupancy Planner
+        Waypoints Collection
+        Dyn. Object Tracking
+        Dyn. Car Tracking.
+        Dyn. Person Tracking
+        
+        
+    TODO - REFACTOR to join it into analyzeX264FSE -- strategy pattern.
+        
     """
     allTraces =    loadObjectFromPickle(getSingleFilenameWithAllTraces())
-    print (len(allTraces)) # all traces is all traces for each configuration.
+       
+    vmAutonomoose = generateFullAutonomooseVariabilityModel()
+
+    InfModelAutonomoose = InfluenceModels.InfluenceModel(vmAutonomoose)
+      
+    TmpMLSettings = MLSettings.MLSettings()
+    
+    TmpMLSettings.useBackward = True
+
+    
+    lstFSETrainConfigurationListing = transformToFSEFormat(trainConfigurationList, vmAutonomoose, \
+        ConfigurationIdToBitsetTransformer=generateBitsetForOneConfigurationAutonomoose, \
+        BitsetToFseTransformer=transformSingleConfigurationToAutonomooseFSE)   
     
     
-#    for aConfId in testConfigurationsList:
-#        CurrentExecutionTrace = allTraces[aConfId][1]
-#        getOverallRealTimeForASingleTraceAutonomoose(CurrentExecutionTrace, aConfId)
-#        
-#   actualExecutionTime = getOverallRealTimeForASingleTraceAutonomoose(CurrentExecutionTrace, aConfId)
+    setNFPValuesForConfigurationListAutonomoose(lstFSETrainConfigurationListing, trainConfigurationList, allTraces)
+
+    tmpSubsetSelection =    FeatureSubsetSelection.FeatureSubsetSelection(InfModelAutonomoose, TmpMLSettings)
+    
+    tmpSubsetSelection.setLearningSet(lstFSETrainConfigurationListing)
+    
+    tmpSubsetSelection.setValidationSet(lstFSETrainConfigurationListing)  # Following FSE paper, Learning set is resued as -- 'validation set' --
+                                        
+    tmpSubsetSelection.learn()    
+    
+    showInfluenceModel = False    
+    
+    if showInfluenceModel:
+        printInfluenceModel(tmpSubsetSelection)
+    
+    lstFSETestConfigurationListing = transformToFSEFormat(testConfigurationsList, vmAutonomoose, \
+        ConfigurationIdToBitsetTransformer=generateBitsetForOneConfigurationAutonomoose, \
+        BitsetToFseTransformer=transformSingleConfigurationToAutonomooseFSE)
+    
+    setNFPValuesForConfigurationListAutonomoose(lstFSETestConfigurationListing, testConfigurationsList, allTraces)
+    
+    lstMeasuredValues = [x.getNfpValue() for x in lstFSETestConfigurationListing]
+    
+
+    lstEstimatedValues = [tmpSubsetSelection.infModel.estimate(x) for x in lstFSETestConfigurationListing]
 
 
-    raise NotImplementedError()
+    lstMeasuredValuesNp = np.array(lstMeasuredValues)
+    lstEstimatedValuesNp = np.array(lstEstimatedValues)
+ 
+    MAETestMean, MAETestStd = mean_absolute_error_and_stdev_eff(lstMeasuredValuesNp, lstEstimatedValuesNp)
+    MEANTestVal = np.mean(lstMeasuredValuesNp)
+    
+    NormalizedMae =   100* (  MAETestMean /         MEANTestVal)
 
+    print("MAE_TEST_MEAN, MAE_TEST_STD, MEAN_TEST, NOMRALIZED_MAE (%) ")
+    print("{0},\t {1},\t {2},\t {3}".format(MAETestMean, MAETestStd, MEANTestVal, NormalizedMae))
+    
           
 if __name__ == "__main__":
     """
@@ -242,19 +324,21 @@ if __name__ == "__main__":
     akiyo/traceExecutionTimesForAll.pkl
     
     """
-    SubjectSystem, trainConfFilename, testConfFilename, traceSummarizedTimesFilename = parseRuntimeParemeters(sys.argv)
+    SubjectSystem, trainConfFilename, testConfFilename, traceSummarizedTimesFilenameOrDirectoryName = parseRuntimeParemeters(sys.argv)
     
     trainConfigurationList, testConfigurationsList = loadObjectFromPickle(trainConfFilename), \
         loadObjectFromPickle(testConfFilename)
     
     if SubjectSystem == MLConstants.x264Name:
             
-        traceExecutionTimesSummaries =  loadObjectFromPickle(traceSummarizedTimesFilename)
+        traceExecutionTimesSummaries =  loadObjectFromPickle(traceSummarizedTimesFilenameOrDirectoryName)
         
         analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutionTimesSummaries)
         
     else:
-        setBaseTracesSourceFolder("../FullTraces/autonomooseFirst/")
+        #traceSummarizedTimesFilenameOrDirectoryName "../FullTraces/autonomooseFirst/"
+
+        setBaseTracesSourceFolder(traceSummarizedTimesFilenameOrDirectoryName)
         
         analyzeAutonomooseFSE(trainConfigurationList, testConfigurationsList)  
 
