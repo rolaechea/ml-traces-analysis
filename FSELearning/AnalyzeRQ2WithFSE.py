@@ -143,7 +143,7 @@ def setNFPValuesForConfigurationListAutonomoose(lstFSETrainConfigurationListing,
             
             CurrentExecutionTrace = allTraces[aConfId][repetitionId]
             
-            sumTimes = getOverallRealTimeForASingleTraceAutonomoose(CurrentExecutionTrace, aConfId)
+            sumTimes += getOverallRealTimeForASingleTraceAutonomoose(CurrentExecutionTrace, aConfId)
             
         averageTimes = sumTimes / 10.0 
         
@@ -200,19 +200,40 @@ def analyzeX264FSE(trainConfigurationList, testConfigurationsList, traceExecutio
     
     setNFPValuesForConfigurationList(lstFSETestConfigurationListing, testConfigurationsList, traceExecutionTimesSummaries )
 
-    lstMeasuredValues = [x.getNfpValue() for x in lstFSETestConfigurationListing]
 
-    lstEstimatedValues = [tmpSubsetSelection.infModel.estimate(x) for x in lstFSETestConfigurationListing]
-        
+    averagingTestSet = False
     
-    showVerboseDebugging = False
-    if showVerboseDebugging:
-        for indexOffset in range(5):
-            print ("Configuration {0}".format(testConfigurationsList[indexOffset]))
-            print ("Configuration wrt Options {0}".format([x.name for x in lstFSETestConfigurationListing[indexOffset].dctBinaryOptionValues.keys()]))
-            print ("Measured Value {0}".format(lstMeasuredValues[indexOffset]))
-            print ("Estimated Value {0}".format(lstEstimatedValues[indexOffset]))
+    if averagingTestSet == True:
         
+        lstMeasuredValues = [x.getNfpValue() for x in lstFSETestConfigurationListing]
+    
+        lstEstimatedValues = [tmpSubsetSelection.infModel.estimate(x) for x in lstFSETestConfigurationListing]
+            
+        
+        showVerboseDebugging = False
+        if showVerboseDebugging:
+            for indexOffset in range(5):
+                print ("Configuration {0}".format(testConfigurationsList[indexOffset]))
+                print ("Configuration wrt Options {0}".format([x.name for x in lstFSETestConfigurationListing[indexOffset].dctBinaryOptionValues.keys()]))
+                print ("Measured Value {0}".format(lstMeasuredValues[indexOffset]))
+                print ("Estimated Value {0}".format(lstEstimatedValues[indexOffset]))
+    else:
+        lstEstimatedValues = [tmpSubsetSelection.infModel.estimate(x) for x in lstFSETestConfigurationListing]
+        
+        lstMeasuredValues = []
+        for aConfId in testConfigurationsList:
+            for repetitionId in range(1, 11):
+                
+                executedTimes =   traceExecutionTimesSummaries[(aConfId, repetitionId)]
+                
+                lstMeasuredValues.append(executedTimes)
+
+        tmpLstEstimatedValues = []
+        for estimatedVal in lstEstimatedValues:
+            for i in range(0, 10):
+                tmpLstEstimatedValues.append(estimatedVal)
+
+        lstEstimatedValues = tmpLstEstimatedValues        
 
     lstMeasuredValuesNp = np.array(lstMeasuredValues)
     lstEstimatedValuesNp = np.array(lstEstimatedValues)
@@ -294,13 +315,39 @@ def analyzeAutonomooseFSE(trainConfigurationList, testConfigurationsList):
         ConfigurationIdToBitsetTransformer=generateBitsetForOneConfigurationAutonomoose, \
         BitsetToFseTransformer=transformSingleConfigurationToAutonomooseFSE)
     
-    setNFPValuesForConfigurationListAutonomoose(lstFSETestConfigurationListing, testConfigurationsList, allTraces)
     
-    lstMeasuredValues = [x.getNfpValue() for x in lstFSETestConfigurationListing]
+    #
+    #
+    #
+    # CALCULATING NMAE WITHOUT USING AVERAGING.
     
+    averagingTestSet = False
+    
+    if averagingTestSet == True:
+        setNFPValuesForConfigurationListAutonomoose(lstFSETestConfigurationListing, testConfigurationsList, allTraces)
+        
+        lstMeasuredValues = [x.getNfpValue() for x in lstFSETestConfigurationListing]
+        
+    
+        lstEstimatedValues = [tmpSubsetSelection.infModel.estimate(x) for x in lstFSETestConfigurationListing]
+    else:
+        lstMeasuredValues = []
+        for aConfId in testConfigurationsList:
+            for repetitionId in range(0, 10):
+                
+                executedTimes =  getOverallRealTimeForASingleTraceAutonomoose(allTraces[aConfId][repetitionId], aConfId)
+                
+                lstMeasuredValues.append(executedTimes)
+        
+        lstEstimatedValues = [tmpSubsetSelection.infModel.estimate(x) for x in lstFSETestConfigurationListing]
+        
+        tmpLstEstimatedValues = []
+        for estimatedVal in lstEstimatedValues:
+            for i in range(0, 10):
+                tmpLstEstimatedValues.append(estimatedVal)
 
-    lstEstimatedValues = [tmpSubsetSelection.infModel.estimate(x) for x in lstFSETestConfigurationListing]
-
+        lstEstimatedValues = tmpLstEstimatedValues
+                
 
     lstMeasuredValuesNp = np.array(lstMeasuredValues)
     lstEstimatedValuesNp = np.array(lstEstimatedValues)
