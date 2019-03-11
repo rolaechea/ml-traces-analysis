@@ -22,7 +22,40 @@ def createChildOption(varMod, optionName):
     
     varMod.addConfigurationOption(binOp1)
 
+
+def generateFullAutonomooseVariabilityModel():
+    """
+    Generates all the features corresponding to Autonomooose.
     
+    
+    BooleanOptions = [("BEHAVIOR", 4 ), \
+                      ("OCCUPANCY", 2),
+                      ("WAYPOINTS", 1)]
+
+        Behavior Planner
+        Occupancy or Mockupancy Planner
+        Waypoints Collection
+        Dyn. Object Tracking
+        Dyn. Car Tracking.
+        Dyn. Person Tracking
+        
+    """
+    vmAutonomoose = VariabilityModel.VariabilityModel("autonomoose_model")
+
+    createChildOption(vmAutonomoose, "behavior")
+    
+    createChildOption(vmAutonomoose, "occupancy")
+
+    createChildOption(vmAutonomoose, "waypoints")
+
+    createChildOption(vmAutonomoose, "dyn_tracking_obj")
+  
+    createChildOption(vmAutonomoose, "dyn_tracking_car")
+
+    createChildOption(vmAutonomoose, "dyn_tracking_person")
+    
+    return vmAutonomoose
+
 def generateFullX264VariabilityModel():
     """
     Generates all the feature corresponding to case X264.
@@ -146,3 +179,43 @@ def transformSingleConfigurationToX264FSE(configurationId, configuarationBitset,
     tmpCurrentConfiguration = Configuration.Configuration(dctCurrent, 0.0)
 
     return tmpCurrentConfiguration
+
+
+def transformSingleConfigurationToAutonomooseFSE(configurationId, configuarationBitset, vm):
+    """
+    Given a configuratin id transform to FSE format -- works for Autonomoose 
+    
+    Extract bit by bit inverse of the code that generates bitsets for autonomooose (in AutonomooseTraces)    
+    
+    Parameters
+    ----------
+    vm : Variability Model describing Autonomoose    
+    
+    
+    Returns
+    -------
+    Equivalent Autonomoose Configurations in FSE Format and measured NFP Value of 0.
+    
+    TODO integrate with transformSingleConfigurationToX264FSE.
+    """
+    
+    lstSelectedOptions =  []
+    
+    binaryConfNames = ["behavior",   "occupancy",  "waypoints", "dyn_tracking_obj", "dyn_tracking_car", "dyn_tracking_person"]
+    
+    for aBit, relativePosition in zip(configuarationBitset, range(len(configuarationBitset))):
+       if aBit == 1:
+           lstSelectedOptions.append(vm.getBinaryOption(binaryConfNames[relativePosition]))        
+        
+    tmpRoot = vm.getBinaryOption("root")
+    
+    dctCurrent = {tmpRoot: BinaryOption.BINARY_VALUE_SELECTED}
+    
+    for aSelectedConfigurationOption in lstSelectedOptions:
+        dctCurrent[aSelectedConfigurationOption] =  BinaryOption.BINARY_VALUE_SELECTED
+        
+        
+    tmpCurrentConfiguration = Configuration.Configuration(dctCurrent, 0.0)
+
+    return tmpCurrentConfiguration        
+    
