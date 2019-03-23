@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+.#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Fri Feb  8 15:25:50 2019
@@ -43,22 +43,7 @@ if __name__ == "__main__":
                 
     print ("Chosen Configurations : {0}".format(str(chosenConfs)))
             
-#        ConfTen = 104
-#    
-#    if ConfTen in trainingSetsAcrossAsSets[0]:
-#        print ("In first Set")
-#    else:
-#        print ("Not In first Set")        
-#        
-#    if ConfTen in trainingSetsAcrossAsSets[1]:
-#        print ("In Second Set")
-#    else:
-#        print ("Not In Second Set")        
-#        
-#    if ConfTen in trainingSetsAcrossAsSets[2]:
-#        print ("In Third Set")
-#    else:
-#        print ("Not In Third Set")        
+ 
 
 
 
