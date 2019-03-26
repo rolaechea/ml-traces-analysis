@@ -70,11 +70,17 @@ def generatePerfumeTracesX264(configurationId):
 
 def generatePerfumeTracesAutonomoose(configurationId):
     """
-    Extract a transe for a single Autonomoose configuration.    
+    Extract a transe for a single Autonomoose configuration (or list of Autonomoose configurations.) 
+    
+    
+    TODO  -- how to partition an Autonomoose trace into "mini" traces.
     """       
     allTraces =   loadObjectFromPickle(getSingleFilenameWithAllTraces())
     
-    print (len(allTraces))
+    FirsTraceForConfiguration = allTraces[configurationId][0]
+    
+    print (type(FirsTraceForConfiguration))
+    
 
 
 
