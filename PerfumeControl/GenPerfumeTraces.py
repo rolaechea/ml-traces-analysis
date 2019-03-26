@@ -70,7 +70,7 @@ def generatePerfumeTracesX264(configurationId):
             traceId = traceId + 1
 
 
-def countAutonomooseLoops(configurationId, tmpTransList):
+def countAndPrintAutonomooseLoops(configurationId, tmpTransList, filenameToOutputTo=""):
     """
     Extract loops offsets and size. 
     Returns a list with them as tuples offset, size.
@@ -81,6 +81,7 @@ def countAutonomooseLoops(configurationId, tmpTransList):
     i  = 0
     initializedCurrentLoop = False
    
+    fdOutput = open(filenameToOutputTo, "w")
 
     # Iterates through trace keeping current loop.
     #Each time START of loop is encounetered adds offset and size of current loop. 
@@ -104,27 +105,55 @@ def countAutonomooseLoops(configurationId, tmpTransList):
     lstLoopStartAndSize.append((currentTransitionOffset, currentTransitionSize))
 
 
+    chosenLoops = [x for x in range(0, len(lstLoopStartAndSize))]#np.random.choice(range(0, len(lstLoopStartAndSize)), size=400, replace=False, )
+    
+    for aLoopIndex in chosenLoops:
+        print("initial, 0", file=fdOutput)
+        aLoopOffsetStart, aLoopOffsetSize =  lstLoopStartAndSize[aLoopIndex]
+        aLoopOffsetEnd = aLoopOffsetStart + aLoopOffsetSize
+        AccumulatedTimeInLoop = 0
+        tmpTransSplit = tmpTransList[aLoopOffsetStart:aLoopOffsetEnd]
+        for anAutonomooseTransition in tmpTransSplit:
+            if IsRealTransitionForGivenConf(anAutonomooseTransition.getTransitionId(), configurationId):
+                AccumulatedTimeInLoop =  AccumulatedTimeInLoop  + anAutonomooseTransition.getTimeTaken()
+                print ("T_{0}, {1}".format(anAutonomooseTransition.getTransitionId(),AccumulatedTimeInLoop), file=fdOutput)
+        print("END_TRACE", file=fdOutput)
+    
+    fdOutput.close()    
     return      lstLoopStartAndSize
 
-def generatePerfumeTracesAutonomoose(configurationId):
+def generatePerfumeTracesAutonomoose(LstConfigurationIds, sourceFolder):
     """
     Extract a transe for a single Autonomoose configuration (or list of Autonomoose configurations.) 
     
     
     TODO  -- how to partition an Autonomoose trace into "mini" traces.
     """       
+    
+            
+        
+    if sourceFolder.find("First") != -1:
+        tmpTraceShorthand = "first"
+    elif sourceFolder.find("Second") != -1:
+        tmpTraceShorthand = "second"
+    else:
+        tmpTraceShorthand = "third"
+        
     allTraces =   loadObjectFromPickle(getSingleFilenameWithAllTraces())
+        
+    for configurationId in LstConfigurationIds:
+        AutonomooseTraceForConfiguration = allTraces[configurationId][0]
     
-    AutonomooseTraceForConfiguration = allTraces[configurationId][0]
+        tmpTransList = AutonomooseTraceForConfiguration.getTransitionList()
     
-    tmpTransList = AutonomooseTraceForConfiguration.getTransitionList()
+
+        
+        filenameToOutputTo = "PerfumeControl/Traces/autonomoose_{0}_configuration_{1}".format(tmpTraceShorthand, configurationId)
+        
+        countAndPrintAutonomooseLoops(configurationId, tmpTransList, filenameToOutputTo)
     
     
-    lstLoopStartAndSize =  countAutonomooseLoops(configurationId, tmpTransList)
-    
-    
-    print ("Number of Loops {0}".format(len(lstLoopStartAndSize)))  
-    
+#    print ("Number of Loops {0}".format(len(lstLoopStartAndSize)))      
 #    print("Pending Loop = {0},{1}".format(currentTransitionOffset, currentTransitionSize))
 #    print("FInal Transition  Id = {0}".format(tmpTransList[-1].getTransitionId()))
 #    
@@ -145,16 +174,17 @@ if __name__ == "__main__":
 
     setBaseTracesSourceFolder(args.sourceFolder)
         
-    configurationId = int(args.configurationId)
+    
     
     if MLConstants.x264Name == subjectSystem:    
-    
-
+        configurationId = int(args.configurationId)
     
         generatePerfumeTracesX264(configurationId)
     
     else:
-        generatePerfumeTracesAutonomoose(configurationId)
+        LstConfigurationIds = [int(x) for x in args.configurationId.split(",")]
+        
+        generatePerfumeTracesAutonomoose(LstConfigurationIds, args.sourceFolder)
     
 
  
