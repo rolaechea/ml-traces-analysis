@@ -19,7 +19,8 @@ from ParseTrace import setBaseTracesSourceFolder, getFilenameFromConfigurationAn
 from PerfumeControl.TraceConversionUtilities import extractTracesAfterReadingFrames, \
  getNumberTracesToSample, printSingleTracePerfumeFormat
  
-
+import AutonomooseTraces
+from AutonomooseTraces import IsRealTransitionForGivenConf
     
 def parseArguments():
     """
@@ -68,6 +69,43 @@ def generatePerfumeTracesX264(configurationId):
             printSingleTracePerfumeFormat (collectedTimedTraces[tracePosition], traceId)
             traceId = traceId + 1
 
+
+def countAutonomooseLoops(configurationId, tmpTransList):
+    """
+    Extract loops offsets and size. 
+    Returns a list with them as tuples offset, size.
+    
+    """    
+    START_LOOP_MARKER_ID = AutonomooseTraces.enumLocalizerTransition
+    
+    i  = 0
+    initializedCurrentLoop = False
+   
+
+    # Iterates through trace keeping current loop.
+    #Each time START of loop is encounetered adds offset and size of current loop. 
+    # Clears Current loop. 
+    # Trailing loop must be later added.
+    lstLoopStartAndSize = []
+    while (i < len(tmpTransList)):
+        aTransition = tmpTransList[i]
+        
+        if IsRealTransitionForGivenConf(aTransition.getTransitionId(), configurationId) and \
+            START_LOOP_MARKER_ID == aTransition.getTransitionId() : 
+               if initializedCurrentLoop == False:
+                   initializedCurrentLoop = True
+               else:
+                   lstLoopStartAndSize.append((currentTransitionOffset, currentTransitionSize))               
+               currentTransitionOffset = i
+               currentTransitionSize = 1               
+        else:
+               currentTransitionSize = currentTransitionSize + 1
+        i = i +1           
+    lstLoopStartAndSize.append((currentTransitionOffset, currentTransitionSize))
+
+
+    return      lstLoopStartAndSize
+
 def generatePerfumeTracesAutonomoose(configurationId):
     """
     Extract a transe for a single Autonomoose configuration (or list of Autonomoose configurations.) 
@@ -77,10 +115,23 @@ def generatePerfumeTracesAutonomoose(configurationId):
     """       
     allTraces =   loadObjectFromPickle(getSingleFilenameWithAllTraces())
     
-    FirsTraceForConfiguration = allTraces[configurationId][0]
+    AutonomooseTraceForConfiguration = allTraces[configurationId][0]
     
-    print (type(FirsTraceForConfiguration))
+    tmpTransList = AutonomooseTraceForConfiguration.getTransitionList()
     
+    
+    lstLoopStartAndSize =  countAutonomooseLoops(configurationId, tmpTransList)
+    
+    
+    print ("Number of Loops {0}".format(len(lstLoopStartAndSize)))  
+    
+#    print("Pending Loop = {0},{1}".format(currentTransitionOffset, currentTransitionSize))
+#    print("FInal Transition  Id = {0}".format(tmpTransList[-1].getTransitionId()))
+#    
+#    print([x.getTransitionId() for x in tmpTransList[0:71]])
+#
+#    print("Pending")    
+#    print([x.getTransitionId() for x in tmpTransList[currentTransitionOffset:currentTransitionOffset+currentTransitionSize]])    
 
 
 
