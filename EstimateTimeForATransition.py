@@ -85,6 +85,15 @@ if __name__ == "__main__":
 
     PredictedTransitionExecutionTime =  regressorWrapperForSelectedTransition.getScaler().inverse_transform(RawPrediction)[0]
     
+    print ( dir(skRegressor))
+    
+    print ( skRegressor.coef_)
+
+    print ( skRegressor.intercept_[0])
+    
+    print("Scaler :  {0}".format(regressorWrapperForSelectedTransition.getScaler().mean_[0]))
+    
+    
     if  not regressorWrapperForSelectedTransition.isLasso():
         PredictedTransitionExecutionTime = PredictedTransitionExecutionTime[0]    
     

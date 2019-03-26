@@ -177,7 +177,7 @@ def analyzeOverallExecutionTimesAutonomoose(regressorsArray, testConfigurationsL
     """
     Autonomoose all traces are in a single file.
     
-    Calculate execution time for first trace of  autonomoose
+    Calculate actual execution time for trace of  autonomoose, as well as predicted execution time.
     """
     listActualTimes = []
     listPredictedTimes = []

@@ -10,8 +10,11 @@ import numpy as np
 
 import argparse
 
+import MLConstants
 
-from ParseTrace import setBaseTracesSourceFolder, getFilenameFromConfigurationAndRepetition
+from pickleFacade import loadObjectFromPickle
+
+from ParseTrace import setBaseTracesSourceFolder, getFilenameFromConfigurationAndRepetition, getSingleFilenameWithAllTraces
 
 from PerfumeControl.TraceConversionUtilities import extractTracesAfterReadingFrames, \
  getNumberTracesToSample, printSingleTracePerfumeFormat
@@ -34,17 +37,11 @@ def parseArguments():
 
     return args
 
-        
-if __name__ == "__main__":
+ 
+def generatePerfumeTracesX264(configurationId):
     """
-    Extracting set of traces for a single product.
+    Extract a trace for a single X264 configuration
     """
-    args = parseArguments()
-    
-    setBaseTracesSourceFolder(args.sourceFolder)
-    
-    configurationId = int(args.configurationId)
-
     traceFilename = getFilenameFromConfigurationAndRepetition(configurationId, 1)
        
     tracesCounts, tracesTimes, collectedTimedTraces, tracesPositions = extractTracesAfterReadingFrames(traceFilename)
@@ -70,6 +67,40 @@ if __name__ == "__main__":
         for tracePosition in chosen:
             printSingleTracePerfumeFormat (collectedTimedTraces[tracePosition], traceId)
             traceId = traceId + 1
+
+def generatePerfumeTracesAutonomoose(configurationId):
+    """
+    Extract a transe for a single Autonomoose configuration.    
+    """       
+    allTraces =   loadObjectFromPickle(getSingleFilenameWithAllTraces())
+    
+    print (len(allTraces))
+
+
+
+if __name__ == "__main__":
+    """
+    Extracting set of traces for a single product.
+    """
+    args = parseArguments()
+       
+    subjectSystem = args.subjectSystem
+
+    setBaseTracesSourceFolder(args.sourceFolder)
+        
+    configurationId = int(args.configurationId)
+    
+    if MLConstants.x264Name == subjectSystem:    
+    
+
+    
+        generatePerfumeTracesX264(configurationId)
+    
+    else:
+        generatePerfumeTracesAutonomoose(configurationId)
+    
+
+ 
 
         
     
