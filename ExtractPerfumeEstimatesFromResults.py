@@ -68,13 +68,20 @@ class PerfumeResults(object):
         
         self.setEntities = set()
 
+        
+        self.dctIdentifierToTransitionid = {}
+        
+        self.dctTransitionIdToIdentfiers = {}
+        
+        
         fdPerf  = open(self.resultsFilename, "r")
         
         allLines  = [x.strip() for x in fdPerf.readlines()]
         
         self.parseEntities(allLines)       
         
-        self.parseTransitions(allLines)       
+        self.parseTransitions(allLines) 
+        
                 
         fdPerf.close()
         
@@ -188,10 +195,11 @@ def generateFilenames():
     """
     
 if __name__ == "__main__":
+    lstX264Configurations = [1054]
     
-    newPerfumeResultsExtractor = PerfumeResults(1054, "PerfumeControl/results_rq_3/x264_akiyo_configuration_1054.dot")
+        newPerfumeResultsExtractor = PerfumeResults(1054, "PerfumeControl/results_rq_3/x264_akiyo_configuration_1054.dot")
     
-    newPerfumeResultsExtractor = PerfumeResults(13, "PerfumeControl/results_rq_3/autonomoose_first_configuration_0.dot")
+        newPerfumeResultsExtractor = PerfumeResults(13, "PerfumeControl/results_rq_3/autonomoose_first_configuration_0.dot")
     
     transitionId = []
     
