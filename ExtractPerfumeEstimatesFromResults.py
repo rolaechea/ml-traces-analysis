@@ -10,6 +10,12 @@ Created on Tue Mar 26 11:59:01 2019
 
 
 
+
+
+    
+        
+    
+
 class ResourceValueWrapper(object):
     def __init__(self, isInterval=False, pointValue=0.0, startIntervalValue=0.0, EndIntervalValue=0.0):
         self.isInterval =  isInterval
@@ -90,6 +96,12 @@ class PerfumeResults(object):
         #print ("Number of Entities found {0}".format(len(self.setEntities)))
 
         #print ("Number of Edges found {0}".format(len(self.setRawLinks)))        
+
+    def _extractIdentifierFromEntityLine(self, aResultLine):
+        """
+        Parses the first number in aResultLine as the identifier
+        """
+        pass
         
     def _extractTransitionIdFromLine(self, aResultLine):
         """
@@ -138,6 +150,8 @@ class PerfumeResults(object):
             if aResultLine.find("\"T_") != -1 or aResultLine.find("\"t_") != -1:
                 
                 transitionId = self._extractTransitionIdFromLine(aResultLine)
+                
+                correspondingIdentifier = self._extractIdentifierFromEntityLine(aResultLine)
                              
                 self.setEntities.add(transitionId)
                 
@@ -174,6 +188,42 @@ class PerfumeResults(object):
                     
                     
                 self.setRawLinks.add(newRawLink)
+                
+    def GetIdentifiersCorrespondingToATransitionId(self, transitionId):
+        pass
+        
+    def getOutgoingLinks(self, transitionRawIdentifier):
+        pass
+
+class SummaryResourceEstimatesForTransition(object):
+    """
+    Object that holds summary of the resources estimated by Perfume for a given transition.
+    """
+    def __init__(self, configurationId, transitionId, resourceLowerBound=0.0, resourceUpperBound=0.0, resourceMean=0.0, resourceStd=0.0):
+        pass
+    
+    def extractSummaryFromParsedPerfumeResult(self, PerfumeResultsObject):
+        """
+        Extracts a summary for givent transition id based on a parsed Perfume object
+        
+        Sets member variables resourceLowerBound=0.0, resourceUpperBound=0.0, resourceMean=0.0, resourceStd=0.0.
+        """
+        
+        lstResourcePointEstimates = []        
+        for transitionIdentifier in PerfumeResultsObject.GetIdentifiersCorrespondingToATransitionId(self.transitionId):
+            for anOutgoingLink in PerfumeResultsObject.getOutgoingLinks(transitionIdentifier):
+                    ResourceValueWrapperObject =  anOutgoingLink.getResource()
+                    
+                    if ResourceValueWrapperObject.isInterval == True:
+                        lstResourcePointEstimates.extend(getPointSetFromInterval(ResourceValueWrapperObject, anOutgoingLink.Count))
+                    else:
+                        lstResourcePointEstimates.extend([ResourceValueWrapperObject.getPointValue()]*int(anOutgoingLink.Count))
+                        
+            # transitionIdentifer outgoing edges.
+            
+
+def getPointSetFromInterval(ResourceValueWrapperObject, Count):
+    pass
 
 
 def CaclulateTransitionIdToIdentifiers():
@@ -193,6 +243,7 @@ def generateFilenames():
     """
     Returns a list of filenames to process
     """
+    pass
     
 if __name__ == "__main__":
     lstX264Configurations = [1054]
