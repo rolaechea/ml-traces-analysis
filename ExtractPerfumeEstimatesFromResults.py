@@ -8,7 +8,7 @@ Created on Tue Mar 26 11:59:01 2019
 
 #class 
 
-
+import numpy as np
 
 
 
@@ -22,6 +22,26 @@ class ResourceValueWrapper(object):
         self.pointValue = pointValue
         self.startIntervalValue =  startIntervalValue
         self.EndIntervalValue =  EndIntervalValue
+        
+    def getRepresntativeNumbers(self, Count):
+        """
+        Converts an interva/number with a Count into a list of numbers        
+        """
+        Count = int(Count)
+        if self.isInterval:
+            numberOfSegments = Count + 1
+            sizeOfSegment = (self.EndIntervalValue - self.startIntervalValue)/numberOfSegments
+            
+            lstDistributedPoints = []
+            for i in range(0, Count):
+                distributedPoint = self.startIntervalValue + (1+i)*sizeOfSegment
+                lstDistributedPoints.append(distributedPoint)
+            return lstDistributedPoints
+        
+        else:            
+            return [self.pointValue] * Count
+    
+                
 
 def createResourceWrapperFromString(rawString):
     """
@@ -56,14 +76,33 @@ class RawLink(object):
         self.hasResource = hasResource
         self.resourceValue = resourceValue
         self.Count = Count
-        
+
+class SummaryResourceEstimatesForTransition(object):
+    """
+    Object that holds summary of the resources estimated by Perfume for a given transition.
+    """
+    def __init__(self, configurationId, transitionId, resourceLowerBound=0.0, resourceUpperBound=0.0, resourceMean=0.0, resourceStd=0.0):
+        self.configurationId = configurationId
+        self.transitionId = transitionId
+        self.resourceLowerBound = resourceLowerBound
+        self.resourceUpperBound = resourceUpperBound
+        self.resourceMean = resourceMean
+        self.resourceStd = resourceStd
         
 class PerfumeResults(object):  
     def __init__(self, configurationId, resultsFilename):
+
         self.configurationId = configurationId
+
         self.resultsFilename = resultsFilename
         
+        self.dctEntitiesToIdentifierSet = {}
+                
+        self.dctIdentifierToEntity = {}
+        
         self.parsePerfumeFile()
+        
+
         
     def parsePerfumeFile(self):
         """
@@ -101,7 +140,11 @@ class PerfumeResults(object):
         """
         Parses the first number in aResultLine as the identifier
         """
-        pass
+
+        txtIdentifier = aResultLine.split(" ")[0]
+        
+        return txtIdentifier
+    
         
     def _extractTransitionIdFromLine(self, aResultLine):
         """
@@ -135,6 +178,26 @@ class PerfumeResults(object):
             
         return firstId, secondId
     
+    
+    def updateEntityIdentiferMappings(self, EntityTransitionId, correspondingIdentifier):
+        """
+        Updates the two maps/lookups  (self.dctEntitiesToIdentifierSet, self.dctIdentifierToEntity) from Identifier to transitionId , and from transitionId to set of Identifiers.        
+        """
+        
+        if EntityTransitionId in self.dctEntitiesToIdentifierSet.keys():
+            self.dctEntitiesToIdentifierSet[EntityTransitionId].add(correspondingIdentifier)
+        else:
+            self.dctEntitiesToIdentifierSet[EntityTransitionId] = set([correspondingIdentifier])
+        
+        if correspondingIdentifier in self.dctIdentifierToEntity.keys():
+            # already set no need to update.
+             if self.dctIdentifierToEntity[correspondingIdentifier] != EntityTransitionId:
+                 print ("Incorrect Perfume Output  - Redefining entity")
+        else:
+            self.dctIdentifierToEntity[correspondingIdentifier] = EntityTransitionId
+        
+
+        
     def parseEntities(self, allLines):
         """
         Extracts set of entities identifers (with respect to transitions) into a set.
@@ -154,6 +217,9 @@ class PerfumeResults(object):
                 correspondingIdentifier = self._extractIdentifierFromEntityLine(aResultLine)
                              
                 self.setEntities.add(transitionId)
+                
+                
+                self.updateEntityIdentiferMappings(transitionId, correspondingIdentifier)
                 
 
     def parseTransitions(self, allLines):
@@ -185,39 +251,75 @@ class PerfumeResults(object):
                     aResourceValue =  createResourceWrapperFromString(splittedLabelText[0])
                     newRawLink = RawLink(sourceEdge, destinationEdge, True, aResourceValue, Count)
                     
-                    
+                
+                
                     
                 self.setRawLinks.add(newRawLink)
                 
-    def GetIdentifiersCorrespondingToATransitionId(self, transitionId):
-        pass
+    def GetIdentifiersCorrespondingToATransitionId(self, EntityTransitionId):
+        return self.dctEntitiesToIdentifierSet[EntityTransitionId]
         
     def getOutgoingLinks(self, transitionRawIdentifier):
         pass
-
-class SummaryResourceEstimatesForTransition(object):
-    """
-    Object that holds summary of the resources estimated by Perfume for a given transition.
-    """
-    def __init__(self, configurationId, transitionId, resourceLowerBound=0.0, resourceUpperBound=0.0, resourceMean=0.0, resourceStd=0.0):
-        pass
     
-    def extractSummaryFromParsedPerfumeResult(self, PerfumeResultsObject):
+    def getIncomingLinks(self, EntityTransitionId):
+        setIncomingLinks = set([])
+        tmpSetCorrespondingIdentifiers = self.GetIdentifiersCorrespondingToATransitionId(EntityTransitionId)
+        
+        for aRawLink in self.setRawLinks:
+            if aRawLink.toDotId in tmpSetCorrespondingIdentifiers:
+                setIncomingLinks.add(aRawLink)
+        return setIncomingLinks
+    
+    def getAllEntities(self):
+        return self.setEntities
+        
+
+    def extractSummaryFromParsedPerfumeResult(self, EntityTransitionId):
         """
         Extracts a summary for givent transition id based on a parsed Perfume object
         
-        Sets member variables resourceLowerBound=0.0, resourceUpperBound=0.0, resourceMean=0.0, resourceStd=0.0.
+        Returns a resource Summary object with resourceLowerBound=0.0, resourceUpperBound=0.0, resourceMean=0.0, resourceStd=0.0.
         """
         
         lstResourcePointEstimates = []        
-        for transitionIdentifier in PerfumeResultsObject.GetIdentifiersCorrespondingToATransitionId(self.transitionId):
-            for anOutgoingLink in PerfumeResultsObject.getOutgoingLinks(transitionIdentifier):
-                    ResourceValueWrapperObject =  anOutgoingLink.getResource()
+
+        tmpSetIncomingLinks = self.getIncomingLinks(EntityTransitionId)
+            
+        for aRawLink in tmpSetIncomingLinks:
+
+            tmpResourceValue    = aRawLink.resourceValue
+                
+            lstRepresentativeNumbers = tmpResourceValue.getRepresntativeNumbers(aRawLink.Count)
+            
+            lstResourcePointEstimates.extend(lstRepresentativeNumbers)
+
+        npArrayResourceEstimates = np.array(lstResourcePointEstimates)
+        
+        resourceLowerBound, resourceUpperBound, resourceMean, resourceStd = \
+                np.min(npArrayResourceEstimates), np.max(npArrayResourceEstimates), np.mean(npArrayResourceEstimates), np.std(npArrayResourceEstimates) 
+        
+        return SummaryResourceEstimatesForTransition(self.configurationId, EntityTransitionId, resourceLowerBound, resourceUpperBound, resourceMean, resourceStd)
+#        configurationId, transitionId, resourceLowerBound=0.0, resourceUpperBound=0.0, resourceMean=0.0, resourceStd=0.0
+        
+#        print("\t Number of Raw Links Incoming to {0} is {1}".format(EntityTransitionId, len(tmpSetIncomingLinks)))    
+#                if tmpResourceValue.isInterval:
+#                    print ("tmpResourceValue interval from {0} to {1} with Count {2} =  First Point is {3} .".format( \
+#                           tmpResourceValue.startIntervalValue, tmpResourceValue.EndIntervalValue, aRawLink.Count,  lstRepresentativeNumbers[0]))
+#                else:
+#                    print ("tmpResourceValue numeric value is {0} with Count {1} First Point is {2} ".format(tmpResourceValue.pointValue, aRawLink.Count, lstRepresentativeNumbers[0]))                
+#            i = i + 1
+#            for anOutgoingLink in self.getOutgoingLinks(transitionIdentifier):
+#                    ResourceValueWrapperObject =  anOutgoingLink.getResource()
                     
-                    if ResourceValueWrapperObject.isInterval == True:
-                        lstResourcePointEstimates.extend(getPointSetFromInterval(ResourceValueWrapperObject, anOutgoingLink.Count))
-                    else:
-                        lstResourcePointEstimates.extend([ResourceValueWrapperObject.getPointValue()]*int(anOutgoingLink.Count))
+#                    if ResourceValueWrapperObject.isInterval == True:
+#                        lstResourcePointEstimates.extend(getPointSetFromInterval(ResourceValueWrapperObject, anOutgoingLink.Count))
+#                    else:
+#                        lstResourcePointEstimates.extend([ResourceValueWrapperObject.getPointValue()]*int(anOutgoingLink.Count))
+
+
+    
+
                         
             # transitionIdentifer outgoing edges.
             
@@ -242,45 +344,31 @@ def CalculateAllIntervalsRelatedToATransition():
 def generateFilenames():
     """
     Returns a list of filenames to process
+    
+    Ignore for now, could come up useful later.
     """
     pass
+
     
 if __name__ == "__main__":
     lstX264Configurations = [1054]
     
-        newPerfumeResultsExtractor = PerfumeResults(1054, "PerfumeControl/results_rq_3/x264_akiyo_configuration_1054.dot")
+    #x264Results = PerfumeResults(1054, "PerfumeControl/results_rq_3/x264_akiyo_configuration_1054.dot")
     
-        newPerfumeResultsExtractor = PerfumeResults(13, "PerfumeControl/results_rq_3/autonomoose_first_configuration_0.dot")
     
-    transitionId = []
-    
-    """
-    pass
-    
-    Inputs 
-        1. Subject System
-        2. Base Folder
-        3. Video Files (CSV)
-        4. Configurations (CSV)        
-        5. Output file
+    LstAutonomooseConfigurations = [0, 3, 6, 7, 13, 18, 20, 26, 29, 31]
+    print("Configuration Id, Transition Id, Execution Time Mean, Execution Time Std, Resource Min, Resource Max")    
+    for traceName in ["first", "Second", "Third"]:    
+        for currentConfiguration in LstAutonomooseConfigurations:
+            AutonomooseResults = PerfumeResults(currentConfiguration, "PerfumeControl/results_rq_3/autonomoose_{0}_configuration_{1}.dot".format(traceName, currentConfiguration))
         
-    Algorithm Desciption 
-    
-    Output Description
-        
-        For each product in X264
-            For each transition in that product's learnt model:        
-                Have a mapping of Counts, Time Taken where Time Taken can be Single Value or Value Range.
-    -----
-        ~~~ a PDF for each transition Times Product around possible times ???
-         
-        How to handle intervals ?
-         Overlapping Intervals ??
-         Width of INtervals ?
-         
+#            print("Extracted Transitions " + str(AutonomooseResults.setEntities) + " for Configuration "  + str(currentConfiguration))
+            for EntityTransId in AutonomooseResults.getAllEntities():
+                summarizedResults = AutonomooseResults.extractSummaryFromParsedPerfumeResult(EntityTransId)
+                print ("{0},{1},{2},{3},{4},{5}, {6}".format(traceName, summarizedResults.configurationId, summarizedResults.transitionId, summarizedResults.resourceMean,\
+                       summarizedResults.resourceStd, summarizedResults.resourceLowerBound, summarizedResults.resourceUpperBound))
+                
 
-
-1.        
-    """
     
 
+    
