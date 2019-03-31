@@ -13,6 +13,7 @@ from pickleFacade import loadObjectFromPickle
 
 from AnalyzerRQ2 import getRegressorToTransitionIdMapping
 
+from AutonomooseTraces import generateBitsetForOneConfigurationAutonomoose
 
 from ConfigurationUtilities import generateBitsetForOneConfiguration, transformFeatureBitmapsToIncludeSquares
 
@@ -41,6 +42,51 @@ def parseArguments():
         exit(0)
             
     return args
+
+
+class TransitionEstimator(object):
+    def __init__(self, SubjectSystem, regressorInputFilename=""):
+        self.SubjectSystem = SubjectSystem
+    
+        self.loadEstimatorForTransitions(regressorInputFilename)
+            
+#        if self.SubjectSystem == MLConstants.x264Name
+#            self.
+            
+    def loadEstimatorForTransitions(self, regressorInputFilename=""):
+        """
+        Load estimator to use as a library.
+        """        
+        self.regressorsArray = loadObjectFromPickle(regressorInputFilename)
+        
+        self.transitionToRegressorMapping =  getRegressorToTransitionIdMapping(self.regressorsArray)
+        
+ 
+    def estimate(self, configurationId, transitionId):
+        """
+        Return the estimate for the given configurationId
+        """
+        if self.SubjectSystem == MLConstants.x264Name:
+            configurationInBitset = generateBitsetForOneConfiguration(configurationId)
+        else:
+            configurationInBitset = generateBitsetForOneConfigurationAutonomoose(configurationId)
+            
+        regressorWrapperForSelectedTransition = self.regressorsArray[self.transitionToRegressorMapping[transitionId]]
+
+        if regressorWrapperForSelectedTransition.getUseSquareX():
+            configurationInBitset = transformFeatureBitmapsToIncludeSquares([configurationInBitset])[0]
+
+        skRegressor = regressorWrapperForSelectedTransition.getRegressor()
+        
+        RawPrediction = skRegressor.predict([configurationInBitset])
+
+        PredictedTransitionExecutionTime =  regressorWrapperForSelectedTransition.getScaler().inverse_transform(RawPrediction)[0]
+       
+        if  not regressorWrapperForSelectedTransition.isLasso():
+            PredictedTransitionExecutionTime = PredictedTransitionExecutionTime[0]    
+    
+        return PredictedTransitionExecutionTime
+            
 
 if __name__ == "__main__":
     """

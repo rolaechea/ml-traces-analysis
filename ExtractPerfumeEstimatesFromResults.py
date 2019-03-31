@@ -11,8 +11,9 @@ Created on Tue Mar 26 11:59:01 2019
 import numpy as np
 
 
-
+from EstimateTimeForATransition import TransitionEstimator
     
+import MLConstants
         
     
 
@@ -349,13 +350,148 @@ def generateFilenames():
     """
     pass
 
+
+
+def calculateQualityScoreOfConfigurations():
+    """
+    Pass
+    """
+    lstConfigurations = [71, 263, 327,  401, 635, 1054, 1137, 1212, 1267, 1997]
+    for traceName in ["akiyo"]:    
+        tmpNewEstimator = TransitionEstimator(MLConstants.x264Name, "{0}/regressors_rep_1.pkl".format(traceName))
+        
+        transitionsSums = {}
+        transitionsCounts = {}
+        transitionsAverages = {}
+        for currentConfiguration in lstConfigurations :
+            tmpResults = PerfumeResults(currentConfiguration, "PerfumeControl/results_rq_3/x264_{0}_configuration_{1}.dot".format(traceName, currentConfiguration))
+            
+            for transIdName in tmpResults.getAllEntities():
+                if transIdName not in ["t_16", "t_17", "t_22"]:
+                    summarizedResults = tmpResults.extractSummaryFromParsedPerfumeResult(transIdName)
+                                                                                         
+                    if transIdName in transitionsSums.keys():
+                        transitionsSums[transIdName] = transitionsSums[transIdName] + summarizedResults.resourceMean
+                        transitionsCounts[transIdName] = transitionsCounts[transIdName] + 1
+                    else:
+                        transitionsSums[transIdName] = summarizedResults.resourceMean
+                        transitionsCounts[transIdName] =  1                        
+        
+        for transName in transitionsSums.keys():
+            tAverage = transitionsSums[transName] / transitionsCounts[transName]
+            print("{0},{1},{2}".format(traceName, transName, tAverage))
+            transitionsAverages[transName] = tAverage
+            
+        dctTotalConfigurationsError = {}
+        dctConfigurationsEffectiveCount = {}
+        for currentConfiguration in  lstConfigurations:
+            tmpResults = PerfumeResults(currentConfiguration, "PerfumeControl/results_rq_3/x264_{0}_configuration_{1}.dot".format(traceName, currentConfiguration))
+            
+            dctTotalConfigurationsError[currentConfiguration] = 0.0
+            dctConfigurationsEffectiveCount[currentConfiguration] = 0.0
+            for transIdName in tmpResults.getAllEntities():
+                if transIdName not in ["t_16", "t_17", "t_22"]:
+
+                    numericTransId = int(transIdName[2:])
+                    PredictedTransitionExecutionTime  = tmpNewEstimator.estimate(currentConfiguration, numericTransId)
+                    
+                    summarizedResults = tmpResults.extractSummaryFromParsedPerfumeResult(transIdName)
+                    
+                    normalizedAbsoluteError = abs(summarizedResults.resourceMean - PredictedTransitionExecutionTime) / transitionsAverages[transIdName]
+                    
+                    normalizedAbsoluteError = min(2.0, normalizedAbsoluteError)
+                    
+                    dctTotalConfigurationsError[currentConfiguration] =  dctTotalConfigurationsError[currentConfiguration] + normalizedAbsoluteError
+                    
+                    dctConfigurationsEffectiveCount[currentConfiguration] = dctTotalConfigurationsError[currentConfiguration] + 1.0
+        print("Configuration, Nomralized NMAE Average")        
+        for currentConfiguration in  lstConfigurations:
+            print("{0},{1}".format(currentConfiguration, dctTotalConfigurationsError[currentConfiguration]/dctConfigurationsEffectiveCount[currentConfiguration]))
+            
+            
+    #
+    # OFF TO RUNNING AUTONOMOOSE.
+    # 
+    lstConfigurations =  [0, 3, 6, 7, 13, 18, 20, 26, 29, 31]
+    lookupDotEquivalent = { "autonomooseFirst" : "first", "autonomooseSecond" : "second", "autonomooseThird" : "Third" }
     
-if __name__ == "__main__":
-    lstX264Configurations = [1054]
+    for traceName in ["autonomooseFirst", "autonomooseSecond", "autonomooseThird"]:    
+        
+        tmpNewEstimator = TransitionEstimator(MLConstants.autonomooseName, "{0}/regressors_rep_1.pkl".format(traceName))
+        
+        traceName = lookupDotEquivalent[traceName]
+        
+        transitionsSums = {}
+        transitionsCounts = {}
+        transitionsAverages = {}
+        for currentConfiguration in lstConfigurations :
+            tmpResults = PerfumeResults(currentConfiguration, "PerfumeControl/results_rq_3/autonomoose_{0}_configuration_{1}.dot".format(traceName, currentConfiguration))
+            
+            for transIdName in tmpResults.getAllEntities():
+                if transIdName not in []:
+                    summarizedResults = tmpResults.extractSummaryFromParsedPerfumeResult(transIdName)
+                                                                                         
+                    if transIdName in transitionsSums.keys():
+                        transitionsSums[transIdName] = transitionsSums[transIdName] + summarizedResults.resourceMean
+                        transitionsCounts[transIdName] = transitionsCounts[transIdName] + 1
+                    else:
+                        transitionsSums[transIdName] = summarizedResults.resourceMean
+                        transitionsCounts[transIdName] =  1                        
+        
+        for transName in transitionsSums.keys():
+            tAverage = transitionsSums[transName] / transitionsCounts[transName]
+            print("{0},{1},{2}".format(traceName, transName, tAverage))
+            transitionsAverages[transName] = tAverage
+            
+        dctTotalConfigurationsError = {}
+        dctConfigurationsEffectiveCount = {}
+        for currentConfiguration in  lstConfigurations:
+            tmpResults = PerfumeResults(currentConfiguration, "PerfumeControl/results_rq_3/autonomoose_{0}_configuration_{1}.dot".format(traceName, currentConfiguration))
+            
+            dctTotalConfigurationsError[currentConfiguration] = 0.0
+            dctConfigurationsEffectiveCount[currentConfiguration] = 0.0
+            for transIdName in tmpResults.getAllEntities():
+                if transIdName not in ["t_16", "t_17", "t_22"]:
+
+                    numericTransId = int(transIdName[2:])
+                    PredictedTransitionExecutionTime  = tmpNewEstimator.estimate(currentConfiguration, numericTransId)
+                    
+                    summarizedResults = tmpResults.extractSummaryFromParsedPerfumeResult(transIdName)
+                    
+                    normalizedAbsoluteError = abs(summarizedResults.resourceMean - PredictedTransitionExecutionTime) / transitionsAverages[transIdName]
+                    
+                    normalizedAbsoluteError = min(2.0, normalizedAbsoluteError)
+                    
+                    dctTotalConfigurationsError[currentConfiguration] =  dctTotalConfigurationsError[currentConfiguration] + normalizedAbsoluteError
+                    
+                    dctConfigurationsEffectiveCount[currentConfiguration] = dctTotalConfigurationsError[currentConfiguration] + 1.0
+        print("Configuration, Nomralized NMAE Average")        
+        for currentConfiguration in  lstConfigurations:
+            print("{0},{1}".format(currentConfiguration, dctTotalConfigurationsError[currentConfiguration]/dctConfigurationsEffectiveCount[currentConfiguration]))            
+
+def runFullX264():
+    """ 
+    Run Comprehensive one
+    """
+    print ("Selecting Best Configuration, Median Configuration, and Worst Configuration -- Akiyo")
     
-    #x264Results = PerfumeResults(1054, "PerfumeControl/results_rq_3/x264_akiyo_configuration_1054.dot")
-    
-    
+    tmpNewEstimator = TransitionEstimator(MLConstants.x264Name, "akiyo/regressors_rep_1.pkl")
+
+    print("ConfigurationId, TransitionId, Our Estimate, Perfume Mean, Perfume STD, Perfume Lower, Perfume Upper")
+    for traceName in ["akiyo"]:    
+        for currentConfiguration in  [71, 263, 327,  401, 635, 1054, 1137, 1212, 1267, 1997]:
+            tmpResults = PerfumeResults(currentConfiguration, "PerfumeControl/results_rq_3/x264_{0}_configuration_{1}.dot".format(traceName, currentConfiguration))
+            
+            for transIdName in tmpResults.getAllEntities():
+                if transIdName not in ["t_16", "t_17", "t_22"]:
+                    numericTransId = int(transIdName[2:])
+                    PredictedTransitionExecutionTime  = tmpNewEstimator.estimate(currentConfiguration, numericTransId)
+                    summarizedResults = tmpResults.extractSummaryFromParsedPerfumeResult(transIdName)
+                
+                    print("{0}, {1}, {2}, {3}, {4}, {5}, {6}".format(currentConfiguration, numericTransId, PredictedTransitionExecutionTime, summarizedResults.resourceMean, \
+                      summarizedResults.resourceStd, summarizedResults.resourceLowerBound, summarizedResults.resourceUpperBound ))
+
+def printPerTrans(): 
     LstAutonomooseConfigurations = [0, 3, 6, 7, 13, 18, 20, 26, 29, 31]
     print("Configuration Id, Transition Id, Execution Time Mean, Execution Time Std, Resource Min, Resource Max")    
     for traceName in ["first", "Second", "Third"]:    
@@ -368,7 +504,59 @@ if __name__ == "__main__":
                 print ("{0},{1},{2},{3},{4},{5}, {6}".format(traceName, summarizedResults.configurationId, summarizedResults.transitionId, summarizedResults.resourceMean,\
                        summarizedResults.resourceStd, summarizedResults.resourceLowerBound, summarizedResults.resourceUpperBound))
                 
-
+    LstX264Configurations = [71, 263, 327,  401, 635, 1054, 1137, 1212, 1267, 1997]          
+    print("Configuration Id, Transition Id, Execution Time Mean, Execution Time Std, Resource Min, Resource Max")    
+    for traceName in ["container"]:    
+        for currentConfiguration in LstX264Configurations:
+            tmpResults = PerfumeResults(currentConfiguration, "PerfumeControl/results_rq_3/x264_{0}_configuration_{1}.dot".format(traceName, currentConfiguration))
+        
+#            print("Extracted Transitions " + str(AutonomooseResults.setEntities) + " for Configuration "  + str(currentConfiguration))
+            for EntityTransId in tmpResults.getAllEntities():
+                summarizedResults = tmpResults.extractSummaryFromParsedPerfumeResult(EntityTransId)
+                print ("{0},{1},{2},{3},{4},{5}, {6}".format(traceName, summarizedResults.configurationId, summarizedResults.transitionId, summarizedResults.resourceMean,\
+                       summarizedResults.resourceStd, summarizedResults.resourceLowerBound, summarizedResults.resourceUpperBound))
+                
+if __name__ == "__main__":
+    lstX264Configurations = [1054]
     
+    #x264Results = PerfumeResults(1054, "PerfumeControl/results_rq_3/x264_akiyo_configuration_1054.dot")
+    
+    # Best, Median, and Worst   
+    selectedConfigurationsX264 = [1997, 1137, 635]
+    selectedConfigurationsAutonomoose = [29, 26, 31]
+    
+    tmpNewEstimator = TransitionEstimator(MLConstants.autonomooseName, "autonomooseFirst/regressors_rep_1.pkl")
+    print("ConfigurationId,TransitionId,OurEstimate,ResourceMean,ResourceStd,ResourceMin,ResourceMax")  
+    for currentConfiguration in selectedConfigurationsAutonomoose:
+        AutonomooseResults = PerfumeResults(currentConfiguration, "PerfumeControl/results_rq_3/autonomoose_{0}_configuration_{1}.dot".format("first", currentConfiguration))
+        for EntityTransId in AutonomooseResults.getAllEntities():            
+            summarizedResults = AutonomooseResults.extractSummaryFromParsedPerfumeResult(EntityTransId)
+            
+            numericTransId = int(EntityTransId[2:])
+            PredictedTransitionExecutionTime  = tmpNewEstimator.estimate(currentConfiguration, numericTransId)
+                                                                         
+            print ("{0},{1},{2},{3},{4},{5},{6}".format(summarizedResults.configurationId, summarizedResults.transitionId, PredictedTransitionExecutionTime,  summarizedResults.resourceMean,\
+                   summarizedResults.resourceStd, summarizedResults.resourceLowerBound, summarizedResults.resourceUpperBound))
 
+    print("ConfigurationId, TransitionId, Our Estimate, Perfume Mean, Perfume STD, Perfume Lower, Perfume Upper")
+    
+    tmpNewEstimator = TransitionEstimator(MLConstants.x264Name, "akiyo/regressors_rep_1.pkl")
+    for currentConfiguration in  selectedConfigurationsX264:
+        tmpResults = PerfumeResults(currentConfiguration, "PerfumeControl/results_rq_3/x264_{0}_configuration_{1}.dot".format("akiyo", currentConfiguration))
+        
+        for transIdName in tmpResults.getAllEntities():
+            if transIdName not in ["t_16", "t_17", "t_22"]:
+                numericTransId = int(transIdName[2:])
+                PredictedTransitionExecutionTime  = tmpNewEstimator.estimate(currentConfiguration, numericTransId)
+                summarizedResults = tmpResults.extractSummaryFromParsedPerfumeResult(transIdName)
+            
+                print("{0},{1},{2},{3},{4},{5},{6}".format(currentConfiguration, numericTransId, PredictedTransitionExecutionTime, summarizedResults.resourceMean, \
+                  summarizedResults.resourceStd, summarizedResults.resourceLowerBound, summarizedResults.resourceUpperBound ))                    
+    # Same for X264
+    
+    #runFullX264()
+    #calculateQualityScoreOfConfigurations()
+    
+    
+    #print ("Selecting Best Configuration, Median Configuration, and Worst Configuration -- First")
     
