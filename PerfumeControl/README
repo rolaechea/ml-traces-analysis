@@ -1,0 +1,6 @@
+./perfume.sh traces/PerfumeComparison/x264_akiyo_configuration_1054 -c traces/PerfumeComparison/args.txt -o output/PerfumeComparison/x264_akiyo_configuration_1054 &> log_perfume_1.txt 
+
+What do we mean by running ten times ?
+Change train/test split ten times ?
+Change rep from which we extract data ?
+Just rerun for underlying perfume randomness ?
